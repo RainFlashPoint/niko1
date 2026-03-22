@@ -1,5 +1,8 @@
 <template>
-  <div class="app-container">
+  <div v-if="isLoginPage" class="login-layout">
+    <router-view />
+  </div>
+  <div v-else class="app-container">
     <aside class="sidebar">
       <div class="logo">
         <span class="logo-icon">🔗</span>
@@ -12,7 +15,7 @@
         text-color="#666666"
         active-text-color="#1890ff"
       >
-        <el-menu-item index="/">
+        <el-menu-item index="/dashboard">
           <span>📊 仪表盘</span>
         </el-menu-item>
         <el-menu-item index="/upstream">
@@ -68,6 +71,8 @@ import { ArrowDown } from '@element-plus/icons-vue'
 const route = useRoute()
 const router = useRouter()
 
+const isLoginPage = computed(() => route.path === '/')
+
 const user = computed(() => {
   const userStr = localStorage.getItem('user')
   return userStr ? JSON.parse(userStr) : null
@@ -78,7 +83,7 @@ const isAdmin = computed(() => user.value?.role === 'admin')
 
 const pageTitle = computed(() => {
   const titles = {
-    '/': '仪表盘',
+    '/dashboard': '仪表盘',
     '/upstream': '上游管理',
     '/downstream': '下游管理',
     '/crm': '渠道CRM',
@@ -93,19 +98,34 @@ const handleCommand = (command) => {
   if (command === 'logout') {
     localStorage.removeItem('user')
     ElMessage.success('已退出登录')
-    router.push('/login')
+    router.push('/')
   }
 }
 
 onMounted(() => {
-  // 未登录跳转到登录页
-  if (!user.value && route.path !== '/login') {
-    router.push('/login')
+  if (!user.value && route.path !== '/') {
+    router.push('/')
   }
 })
 </script>
 
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+</style>
+
 <style scoped>
+.login-layout {
+  min-height: 100vh;
+}
+
 .app-container {
   display: flex;
   min-height: 100vh;
