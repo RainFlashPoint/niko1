@@ -2,13 +2,9 @@
 
 ---
 
-## 一、概述
+## 一、接口概览
 
-平台提供标准化 REST API，用于：
-- ✅ 上游渠道推送线索给我们
-- ✅ 我们推送线索给下游客户
-
-**基础信息**
+### 1.1 基础信息
 | 项目 | 值 |
 |------|------|
 | 基础URL | `https://api.example.com` |
@@ -16,23 +12,105 @@
 | 编码 | UTF-8 |
 | 签名算法 | MD5 |
 
+### 1.2 接口列表
+
+#### 上游接口（外部调用我们）
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /api/v1/auth/register | POST | 上游注册 |
+| /api/v1/auth/login | POST | 上游登录 |
+| /api/v1/inflow/push | POST | 推送线索 |
+| /api/v1/inflow/batch | POST | 批量推送线索 |
+| /api/v1/channel/info | GET | 渠道信息 |
+| /api/v1/channel/stats | GET | 渠道统计 |
+| /api/v1/channel/bill | GET | 账单明细 |
+
+#### 下游接口（外部调用我们）
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /api/v1/client/register | POST | 下游注册 |
+| /api/v1/client/login | POST | 下游登录 |
+| /api/v1/client/callback | POST | 接收线索回调 |
+| /api/v1/client/callback/config | POST | 配置回调地址 |
+| /api/v1/client/stats | GET | 推送统计 |
+| /api/v1/client/balance | GET | 账户余额 |
+
 ---
 
-## 二、上游 API（接收线索）
+## 二、上游 API
 
-### 2.1 推送线索
+### 2.1 上游注册
 
-**请求地址**
 ```
-POST /v1/inflow
+POST /api/v1/auth/register
+```
+
+**请求体**
+```json
+{
+  "username": "channel_a",
+  "password": "password123",
+  "company": "渠道A公司",
+  "contact": "张经理",
+  "phone": "13800138000",
+  "email": "zhang@example.com"
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "appId": "uk_abc123",
+    "appSecret": "secret_xyz789",
+    "username": "channel_a"
+  }
+}
+```
+
+---
+
+### 2.2 上游登录
+
+```
+POST /api/v1/auth/login
+```
+
+**请求体**
+```json
+{
+  "username": "channel_a",
+  "password": "password123"
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 7200
+  }
+}
+```
+
+---
+
+### 2.3 推送线索
+
+```
+POST /api/v1/inflow/push
 ```
 
 **请求头**
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| Content-Type | string | ✅ | application/json |
-| X-App-Id | string | ✅ | 渠道标识 |
-| X-Signature | string | ✅ | 签名 |
+| 参数 | 说明 |
+|------|------|
+| Authorization | Bearer {token} |
+| X-Signature | MD5签名 |
 
 **请求体**
 ```json
@@ -41,26 +119,14 @@ POST /v1/inflow
   "name": "张三",
   "amount": "50000",
   "area": "北京",
-  "source": "渠道A",
   "gender": "男",
   "age": 35,
-  "income": "20000"
+  "income": "20000",
+  "remark": "备注信息"
 }
 ```
 
-**字段说明**
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| phone | string | ✅ | 手机号（11位） |
-| name | string | ✅ | 姓名 |
-| amount | string | - | 期望额度 |
-| area | string | - | 所在地区 |
-| source | string | - | 来源标识 |
-| gender | string | - | 性别 |
-| age | int | - | 年龄 |
-| income | string | - | 月收入 |
-
-**响应示例**
+**响应**
 ```json
 {
   "code": 0,
@@ -73,25 +139,225 @@ POST /v1/inflow
 }
 ```
 
-**错误码**
-| code | message | 说明 |
-|------|---------|------|
-| 0 | success | 成功 |
-| 1001 | missing parameter | 缺少必填参数 |
-| 1002 | invalid phone | 手机号格式错误 |
-| 1003 | signature error | 签名错误 |
-| 1004 | channel disabled | 渠道已禁用 |
-| 1005 | rate limit | 请求过于频繁 |
+---
+
+### 2.4 批量推送线索
+
+```
+POST /api/v1/inflow/batch
+```
+
+**请求体**
+```json
+{
+  "leads": [
+    {
+      "phone": "13800138000",
+      "name": "张三",
+      "amount": "50000"
+    },
+    {
+      "phone": "13900139000",
+      "name": "李四",
+      "amount": "30000"
+    }
+  ]
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 2,
+    "success": 2,
+    "failed": 0,
+    "results": [
+      { "phone": "13800138000", "leadId": "LD20240320001", "status": "success" },
+      { "phone": "13900139000", "leadId": "LD20240320002", "status": "success" }
+    ]
+  }
+}
+```
 
 ---
 
-## 三、下游 API（推送线索）
+### 2.5 渠道信息
 
-### 3.1 推送规则
+```
+GET /api/v1/channel/info
+```
 
-当有新线索时，系统根据分发规则自动推送给匹配的下游客户。
+**响应**
+```json
+{
+  "code": 0,
+  "data": {
+    "appId": "uk_abc123",
+    "company": "渠道A公司",
+    "contact": "张经理",
+    "phone": "13800138000",
+    "status": "active",
+    "createTime": "2024-01-01T00:00:00Z"
+  }
+}
+```
 
-**调用方式**
+---
+
+### 2.6 渠道统计
+
+```
+GET /api/v1/channel/stats?date=2024-01-15
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "data": {
+    "today": {
+      "pushCount": 156,
+      "successCount": 152,
+      "failCount": 4
+    },
+    "month": {
+      "pushCount": 4560,
+      "successCount": 4480,
+      "failCount": 80
+    }
+  }
+}
+```
+
+---
+
+### 2.7 账单明细
+
+```
+GET /api/v1/channel/bill?startDate=2024-01-01&endDate=2024-01-15
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "data": {
+    "list": [
+      {
+        "date": "2024-01-15",
+        "quantity": 156,
+        "unitPrice": 5.0,
+        "amount": 780.0,
+        "status": "pending"
+      }
+    ],
+    "total": 4560.0,
+    "pending": 2340.0,
+    "paid": 2220.0
+  }
+}
+```
+
+---
+
+## 三、下游 API
+
+### 3.1 下游注册
+
+```
+POST /api/v1/client/register
+```
+
+**请求体**
+```json
+{
+  "username": "client_zhang",
+  "password": "password123",
+  "company": "客户张三公司",
+  "contact": "李总",
+  "phone": "13900139000",
+  "email": "li@example.com"
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "clientId": "client_001",
+    "apiKey": "sk_live_abc123****xyz",
+    "username": "client_zhang"
+  }
+}
+```
+
+---
+
+### 3.2 下游登录
+
+```
+POST /api/v1/client/login
+```
+
+**请求体**
+```json
+{
+  "username": "client_zhang",
+  "password": "password123"
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresIn": 7200
+  }
+}
+```
+
+---
+
+### 3.3 配置回调地址
+
+```
+POST /api/v1/client/callback/config
+```
+
+**请求体**
+```json
+{
+  "callbackUrl": "https://your-server.com/webhook",
+  "callbackSecret": "your_webhook_secret"
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "callbackUrl": "https://your-server.com/webhook",
+    "status": "active"
+  }
+}
+```
+
+---
+
+### 3.4 接收线索回调
+
+**这是我们主动调用的接口，下游需实现**
+
 ```
 POST 下游回调地址
 ```
@@ -100,7 +366,7 @@ POST 下游回调地址
 | 参数 | 说明 |
 |------|------|
 | Content-Type | application/json |
-| X-Signature | 签名 |
+| X-Signature | MD5签名 |
 
 **请求体**
 ```json
@@ -112,28 +378,96 @@ POST 下游回调地址
   "area": "北京",
   "gender": "男",
   "age": 35,
+  "income": "20000",
   "source": "渠道A",
   "pushTime": "2024-01-15T14:30:05Z"
 }
 ```
 
 **下游响应**
-| 状态码 | 说明 |
-|--------|------|
-| 200 | 接收成功 |
-| 其他 | 失败，自动重试3次 |
+```json
+{
+  "code": 0,
+  "message": "success"
+}
+```
 
 ---
 
-## 四、签名算法
-
-### 4.1 生成签名
+### 3.5 推送统计
 
 ```
-Signature = MD5(JSON.stringify(body) + AppSecret)
+GET /api/v1/client/stats?date=2024-01-15
 ```
 
-**示例（Node.js）**
+**响应**
+```json
+{
+  "code": 0,
+  "data": {
+    "today": {
+      "receivedCount": 45,
+      "successCount": 42,
+      "failCount": 3
+    },
+    "month": {
+      "receivedCount": 1350,
+      "successCount": 1290,
+      "failCount": 60
+    }
+  }
+}
+```
+
+---
+
+### 3.6 账户余额
+
+```
+GET /api/v1/client/balance
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "data": {
+    "balance": 5000.0,
+    "freeze": 1000.0,
+    "available": 4000.0,
+    "todayCost": 450.0
+  }
+}
+```
+
+---
+
+## 四、错误码
+
+| code | message | 说明 |
+|------|---------|------|
+| 0 | success | 成功 |
+| 1001 | missing parameter | 缺少必填参数 |
+| 1002 | invalid phone | 手机号格式错误 |
+| 1003 | signature error | 签名错误 |
+| 1004 | channel disabled | 渠道已禁用 |
+| 1005 | rate limit | 请求过于频繁 |
+| 2001 | unauthorized | 未授权 |
+| 2002 | token expired | Token过期 |
+| 3001 | callback failed | 回调失败 |
+| 3002 | insufficient balance | 余额不足 |
+
+---
+
+## 五、签名算法
+
+### 5.1 生成签名
+
+```
+Signature = MD5(JSON.stringify(body) + Secret)
+```
+
+**Node.js 示例**
 ```javascript
 const crypto = require('crypto');
 
@@ -143,7 +477,7 @@ function generateSignature(body, secret) {
 }
 ```
 
-**示例（Python）**
+**Python 示例**
 ```python
 import hashlib
 import json
@@ -155,86 +489,52 @@ def generate_signature(body, secret):
 
 ---
 
-## 五、Demo 代码
+## 六、Demo 代码
 
-### 5.1 上游推送（Node.js）
+### 6.1 上游推送（Node.js）
 
 ```javascript
 const axios = require('axios');
 const crypto = require('crypto');
 
-// 配置
-const APP_ID = 'your_app_id';
-const APP_SECRET = 'your_app_secret';
-const API_URL = 'https://api.example.com/v1/inflow';
+const CONFIG = {
+  API_URL: 'https://api.example.com',
+  APP_ID: 'your_app_id',
+  APP_SECRET: 'your_app_secret'
+};
 
-// 签名
-function generateSignature(body, secret) {
-  const signString = JSON.stringify(body) + secret;
-  return crypto.createHash('md5').update(signString).digest('hex');
+function sign(body, secret) {
+  return crypto.createHash('md5')
+    .update(JSON.stringify(body) + secret).digest('hex');
 }
 
-// 推送线索
-async function pushLead(phone, name, amount = '50000', area = '北京') {
-  const body = { phone, name, amount, area };
-  
+async function login() {
+  const res = await axios.post(`${CONFIG.API_URL}/api/v1/auth/login`, {
+    username: CONFIG.APP_ID,
+    password: 'password123'
+  });
+  return res.data.data.token;
+}
+
+async function pushLead(token, phone, name) {
+  const body = { phone, name, amount: '50000', area: '北京' };
   const headers = {
-    'Content-Type': 'application/json',
-    'X-App-Id': APP_ID,
-    'X-Signature': generateSignature(body, APP_SECRET)
+    'Authorization': `Bearer ${token}`,
+    'X-Signature': sign(body, CONFIG.APP_SECRET)
   };
-  
-  const response = await axios.post(API_URL, body, { headers });
-  return response.data;
+  return axios.post(`${CONFIG.API_URL}/api/v1/inflow/push`, body, { headers });
 }
 
-// 测试
-pushLead('13800138000', '张三', '50000', '北京')
-  .then(console.log)
-  .catch(console.error);
+async function main() {
+  const token = await login();
+  const result = await pushLead(token, '13800138000', '张三');
+  console.log(result.data);
+}
+
+main();
 ```
 
-### 5.2 上游推送（Python）
-
-```python
-import requests
-import hashlib
-import json
-import time
-
-# 配置
-APP_ID = 'your_app_id'
-APP_SECRET = 'your_app_secret'
-API_URL = 'https://api.example.com/v1/inflow'
-
-def generate_signature(body, secret):
-    sign_string = json.dumps(body, ensure_ascii=False) + secret
-    return hashlib.md5(sign_string.encode('utf-8')).hexdigest()
-
-def push_lead(phone, name, amount='50000', area='北京'):
-    body = {
-        'phone': phone,
-        'name': name,
-        'amount': amount,
-        'area': area,
-        'timestamp': int(time.time() * 1000)
-    }
-    
-    headers = {
-        'Content-Type': 'application/json',
-        'X-App-Id': APP_ID,
-        'X-Signature': generate_signature(body, APP_SECRET)
-    }
-    
-    response = requests.post(API_URL, json=body, headers=headers)
-    return response.json()
-
-# 测试
-result = push_lead('13800138000', '张三', '50000', '北京')
-print(result)
-```
-
-### 5.3 下游接收（Node.js）
+### 6.2 下游接收（Node.js）
 
 ```javascript
 const express = require('express');
@@ -243,26 +543,19 @@ const app = express();
 
 app.use(express.json());
 
-// 签名验证
-function verifySignature(body, signature, secret) {
-  const signString = JSON.stringify(body) + secret;
-  return signature === crypto.createHash('md5').update(signString).digest('hex');
-}
+const WEBHOOK_SECRET = 'your_webhook_secret';
 
-// 接收线索回调
 app.post('/webhook', (req, res) => {
-  const signature = req.headers['x-signature'];
-  const SECRET = 'your_webhook_secret';
+  const sig = req.headers['x-signature'];
+  const expected = crypto.createHash('md5')
+    .update(JSON.stringify(req.body) + WEBHOOK_SECRET).digest('hex');
   
-  // 验证签名
-  if (!verifySignature(req.body, signature, SECRET)) {
+  if (sig !== expected) {
     return res.status(401).json({ code: 1003, message: 'signature error' });
   }
   
-  const { leadId, phone, name, amount, area } = req.body;
-  console.log('收到新线索:', { leadId, phone, name, amount, area });
-  
-  // 处理业务...
+  const { leadId, phone, name, amount } = req.body;
+  console.log('收到线索:', { leadId, phone, name, amount });
   
   res.json({ code: 0, message: 'success' });
 });
@@ -272,37 +565,36 @@ app.listen(3000, () => console.log('服务启动: 3000'));
 
 ---
 
-## 六、测试
+## 七、测试
 
-### 测试渠道
-| AppId | AppSecret | 说明 |
-|-------|-----------|------|
-| uk_test001 | secret001 | 测试渠道A |
-| uk_test002 | secret002 | 测试渠道B |
+### 测试账号
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 上游 | test_upstream | test123456 |
+| 下游 | test_downstream | test123456 |
 
 ### 测试命令
 ```bash
-# 启动 Mock Server
+# 启动本地 Mock Server
 node server/mock-api.js
 
-# 测试推送
-curl -X POST http://localhost:3000/api/v1/inflow \
+# 测试登录
+curl -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -H "X-App-Id: uk_test001" \
-  -H "X-Signature: $(echo -n '{"phone":"13800138000","name":"张三"}secret001' | md5)" \
-  -d '{"phone":"13800138000","name":"张三"}'
+  -d '{"username":"test_upstream","password":"test123456"}'
 ```
 
 ---
 
-## 七、注意事项
+## 八、注意事项
 
 | 事项 | 说明 |
 |------|------|
 | 请求频率 | 不超过 10 次/秒 |
-| 签名密钥 | 请妥善保管，不要泄露 |
-| 重试机制 | 下游失败时自动重试 3 次 |
-| 数据安全 | 敏感信息建议加密传输 |
+| Token有效期 | 2小时 |
+| 签名密钥 | 请妥善保管 |
+| 重试机制 | 失败自动重试 3 次 |
+| 数据安全 | 敏感信息建议加密 |
 
 ---
 
