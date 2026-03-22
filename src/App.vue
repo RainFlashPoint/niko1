@@ -27,7 +27,7 @@
         <el-menu-item index="/distribute">
           <span>🔄 分发配置</span>
         </el-menu-item>
-        <el-menu-item index="/finance">
+        <el-menu-item index="/finance" v-if="isAdmin">
           <span>💰 财务</span>
         </el-menu-item>
         <el-menu-item index="/landing">
@@ -39,7 +39,17 @@
       <header class="header">
         <h2>{{ pageTitle }}</h2>
         <div class="user-info">
-          <span>👤 管理员</span>
+          <el-dropdown @command="handleCommand">
+            <span class="user-dropdown">
+              <span>👤 {{ userName }}</span>
+              <el-icon><ArrowDown /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </header>
       <div class="content">
@@ -50,10 +60,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 
 const route = useRoute()
+const router = useRouter()
+
+const user = computed(() => {
+  const userStr = localStorage.getItem('user')
+  return userStr ? JSON.parse(userStr) : null
+})
+
+const userName = computed(() => user.value?.name || '未登录')
+const isAdmin = computed(() => user.value?.role === 'admin')
+
 const pageTitle = computed(() => {
   const titles = {
     '/': '仪表盘',
@@ -65,6 +87,21 @@ const pageTitle = computed(() => {
     '/landing': 'H5落地页'
   }
   return titles[route.path] || '流量中转'
+})
+
+const handleCommand = (command) => {
+  if (command === 'logout') {
+    localStorage.removeItem('user')
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  }
+}
+
+onMounted(() => {
+  // 未登录跳转到登录页
+  if (!user.value && route.path !== '/login') {
+    router.push('/login')
+  }
 })
 </script>
 
@@ -117,8 +154,16 @@ const pageTitle = computed(() => {
   font-size: 20px;
 }
 
-.user-info {
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
   color: #666;
+}
+
+.user-dropdown:hover {
+  color: #1890ff;
 }
 
 .content {
