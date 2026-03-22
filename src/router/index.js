@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import Dashboard from '../views/Dashboard.vue'
 import Upstream from '../views/Upstream.vue'
 import Downstream from '../views/Downstream.vue'
@@ -8,10 +9,9 @@ import Distribute from '../views/Distribute.vue'
 import Landing from '../views/Landing.vue'
 import Login from '../views/Login.vue'
 
-// 路由配置
 const routes = [
-  { path: '/login', name: 'Login', component: Login },
-  { path: '/', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true } },
+  { path: '/', name: 'Login', component: Login },
+  { path: '/dashboard', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/upstream', name: 'Upstream', component: Upstream, meta: { requiresAuth: true } },
   { path: '/downstream', name: 'Downstream', component: Downstream, meta: { requiresAuth: true } },
   { path: '/crm', name: 'CRM', component: CRM, meta: { requiresAuth: true } },
@@ -25,16 +25,17 @@ const router = createRouter({
   routes
 })
 
-// 权限验证
 router.beforeEach((to, from, next) => {
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
   
-  if (to.meta.requiresAuth && !user) {
-    next('/login')
+  if (to.path !== '/' && to.meta.requiresAuth && !user) {
+    next('/')
+  } else if (to.path === '/' && user) {
+    next('/dashboard')
   } else if (to.meta.requiresAdmin && user?.role !== 'admin') {
     ElMessage.warning('需要管理员权限')
-    next('/')
+    next('/dashboard')
   } else {
     next()
   }
