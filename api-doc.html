@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>信贷流量平台 API 接口文档</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6; }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    h3 { color: #666; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Monaco', monospace; }
+    pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .note { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+<h1>📡 信贷流量平台 API 接口文档</h1>
+
+<h2>一、接口概览</h2>
+
+<h3>1.1 基础信息</h3>
+<table>
+<tr><th>项目</th><th>值</th></tr>
+<tr><td>基础URL</td><td>https://api.example.com</td></tr>
+<tr><td>数据格式</td><td>JSON</td></tr>
+<tr><td>编码</td><td>UTF-8</td></tr>
+</table>
+
+<h3>1.2 接口列表</h3>
+<table>
+<tr><th>接口</th><th>方法</th><th>加密方式</th><th>说明</th></tr>
+<tr><td>/api/v1/query/collision</td><td>POST</td><td>MD5</td><td>撞库查询</td></tr>
+<tr><td>/api/v1/query/collision/batch</td><td>POST</td><td>MD5</td><td>批量撞库</td></tr>
+<tr><td>/api/v1/entry/create</td><td>POST</td><td>RSA</td><td>进件提交</td></tr>
+<tr><td>/api/v1/entry/batch</td><td>POST</td><td>RSA</td><td>批量进件</td></tr>
+<tr><td>/api/v1/entry/status</td><td>GET</td><td>-</td><td>进件状态查询</td></tr>
+</table>
+
+<h2>二、撞库接口（MD5）</h2>
+
+<h3>2.1 单条撞库</h3>
+<p><code>POST /api/v1/query/collision</code></p>
+
+<h4>请求头</h4>
+<table>
+<tr><th>参数</th><th>说明</th></tr>
+<tr><td>Content-Type</td><td>application/json</td></tr>
+<tr><td>X-App-Id</td><td>渠道标识</td></tr>
+<tr><td>X-Signature</td><td>MD5签名</td></tr>
+</table>
+
+<h4>请求体</h4>
+<pre>{
+  "idCard": "110101199001011234",
+  "phone": "13800138000",
+  "name": "张三"
+}</pre>
+
+<h4>字段说明</h4>
+<table>
+<tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th></tr>
+<tr><td>idCard</td><td>string</td><td>✅</td><td>身份证号（MD5加密传输）</td></tr>
+<tr><td>phone</td><td>string</td><td>✅</td><td>手机号（MD5加密传输）</td></tr>
+<tr><td>name</td><td>string</td><td>✅</td><td>姓名（MD5加密传输）</td></tr>
+</table>
+
+<h4>响应</h4>
+<pre>{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "queryId": "Q20240320001",
+    "result": {
+      "totalCount": 3,
+      "platforms": [
+        {"name": "平台A", "count": 2, "overdueCount": 0},
+        {"name": "平台B", "count": 1, "overdueCount": 1}
+      ],
+      "riskLevel": "中风险"
+    },
+    "queryTime": "2024-01-15T14:30:00Z"
+  }
+}</pre>
+
+<h2>三、进件接口（RSA）</h2>
+
+<div class="note">
+<strong>注意：</strong>RSA公钥由平台预置提供，请联系管理员获取。
+</div>
+
+<h3>3.1 进件提交</h3>
+<p><code>POST /api/v1/entry/create</code></p>
+
+<h4>请求头</h4>
+<table>
+<tr><th>参数</th><th>说明</th></tr>
+<tr><td>Content-Type</td><td>application/json</td></tr>
+<tr><td>X-App-Id</td><td>渠道标识</td></tr>
+<tr><td>X-Signature</td><td>MD5签名</td></tr>
+</table>
+
+<h4>请求体（RSA加密）</h4>
+<pre>{
+  "encryptedData": "BASE64编码的RSA加密数据"
+}</pre>
+
+<h4>加密数据结构</h4>
+<pre>{
+  "basicInfo": {
+    "name": "张三",
+    "idCard": "110101199001011234",
+    "phone": "13800138000",
+    "gender": "男",
+    "age": 35
+  },
+  "financeInfo": {
+    "income": "20000",
+    "socialSecurity": true,
+    "housingFund": true
+  },
+  "loanInfo": {
+    "amount": "50000",
+    "purpose": "经营周转",
+    "term": 12
+  }
+}</pre>
+
+<h4>响应</h4>
+<pre>{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "entryId": "E20240320001",
+    "status": "pending",
+    "createTime": "2024-01-15T14:30:00Z"
+  }
+}</pre>
+
+<h3>3.2 状态说明</h3>
+<table>
+<tr><th>status</th><th>说明</th></tr>
+<tr><td>pending</td><td>待审核</td></tr>
+<tr><td>reviewing</td><td>审核中</td></tr>
+<tr><td>approved</td><td>已通过</td></tr>
+<tr><td>rejected</td><td>已拒绝</td></tr>
+<tr><td>disbursed</td><td>已放款</td></tr>
+</table>
+
+<h2>四、加密说明</h2>
+
+<h3>4.1 MD5 撞库加密</h3>
+<pre>MD5(身份证号 + 手机号 + 姓名 + AppSecret)</pre>
+
+<h3>4.2 RSA 进件加密</h3>
+<pre>RSA公钥加密 + Base64编码</pre>
+
+<h2>五、签名算法</h2>
+<pre>Signature = MD5(请求体JSON + AppSecret)</pre>
+
+<h2>六、错误码</h2>
+<table>
+<tr><th>code</th><th>说明</th></tr>
+<tr><td>0</td><td>成功</td></tr>
+<tr><td>1001</td><td>缺少参数</td></tr>
+<tr><td>1002</td><td>格式错误</td></tr>
+<tr><td>1003</td><td>签名错误</td></tr>
+<tr><td>1004</td><td>渠道禁用</td></tr>
+<tr><td>1005</td><td>频率限制</td></tr>
+<tr><td>2001</td><td>加密失败</td></tr>
+<tr><td>2002</td><td>解密失败</td></tr>
+</table>
+
+<h2>七、测试账号</h2>
+<table>
+<tr><th>AppId</th><th>AppSecret</th></tr>
+<tr><td>test_001</td><td>test_secret_001</td></tr>
+</table>
+
+<hr>
+<p style="color: #888; text-align: center;">文档版本 v1.0 | 更新时间 2024-01-15</p>
+
+</body>
+</html>

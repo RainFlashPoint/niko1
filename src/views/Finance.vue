@@ -29,7 +29,7 @@
 
     <el-card style="margin-top: 20px;">
       <template #header>
-        <span>收入明细（线索销售）</span>
+        <span>收入明细（信息销售）</span>
       </template>
       <el-table :data="income" style="width: 100%">
         <el-table-column prop="date" label="日期" width="120" />
@@ -51,7 +51,7 @@
 
     <el-card style="margin-top: 20px;">
       <template #header>
-        <span>支出明细（线索采购）</span>
+        <span>支出明细（信息采购）</span>
       </template>
       <el-table :data="expense" style="width: 100%">
         <el-table-column prop="date" label="日期" width="120" />

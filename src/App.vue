@@ -21,9 +21,6 @@
         <el-menu-item index="/downstream">
           <span>📤 下游管理</span>
         </el-menu-item>
-        <el-menu-item index="/leads">
-          <span>📨 线索管理</span>
-        </el-menu-item>
         <el-menu-item index="/crm">
           <span>👥 CRM</span>
         </el-menu-item>
@@ -62,8 +59,7 @@ const pageTitle = computed(() => {
     '/': '仪表盘',
     '/upstream': '上游管理',
     '/downstream': '下游管理',
-    '/leads': '线索管理',
-    '/crm': '客户CRM',
+    '/crm': '渠道CRM',
     '/distribute': '分发配置',
     '/finance': '财务管理',
     '/landing': 'H5落地页'

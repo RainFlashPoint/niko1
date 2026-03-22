@@ -3,7 +3,7 @@
     <el-row :gutter="20">
       <el-col :span="6">
         <div class="stat-card">
-          <div class="stat-title">今日线索</div>
+          <div class="stat-title">今日信息</div>
           <div class="stat-value" style="color: #1890ff;">423</div>
           <div class="stat-change">↑ 12.5%</div>
         </div>

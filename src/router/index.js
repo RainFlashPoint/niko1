@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import Upstream from '../views/Upstream.vue'
 import Downstream from '../views/Downstream.vue'
-import Leads from '../views/Leads.vue'
 import CRM from '../views/CRM.vue'
 import Finance from '../views/Finance.vue'
 import Distribute from '../views/Distribute.vue'
@@ -12,7 +11,6 @@ const routes = [
   { path: '/', name: 'Dashboard', component: Dashboard },
   { path: '/upstream', name: 'Upstream', component: Upstream },
   { path: '/downstream', name: 'Downstream', component: Downstream },
-  { path: '/leads', name: 'Leads', component: Leads },
   { path: '/crm', name: 'CRM', component: CRM },
   { path: '/distribute', name: 'Distribute', component: Distribute },
   { path: '/finance', name: 'Finance', component: Finance },

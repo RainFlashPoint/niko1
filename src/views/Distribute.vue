@@ -3,7 +3,7 @@
     <el-row :gutter="20">
       <el-col :span="6">
         <div class="stat-card">
-          <div class="stat-title">今日线索</div>
+          <div class="stat-title">今日信息</div>
           <div class="stat-value" style="color: #1890ff;">423</div>
         </div>
       </el-col>
@@ -31,12 +31,12 @@
       <el-col :span="12">
         <el-card>
           <template #header>
-            <span>📥 上游 API（接收线索）</span>
+            <span>📥 上游 API（接收信息）</span>
           </template>
           <div class="api-box">
             <p><strong>接口地址：</strong><code>POST /api/inflow</code></p>
             <p><strong>调用方：</strong>上游渠道</p>
-            <p><strong>功能：</strong>上游调用此接口推送线索给我们</p>
+            <p><strong>功能：</strong>上游调用此接口推送信息给我们</p>
             <div class="api-example">
               <p>请求示例：</p>
               <pre>{
@@ -53,12 +53,12 @@
       <el-col :span="12">
         <el-card>
           <template #header>
-            <span>📤 下游 API（推送线索）</span>
+            <span>📤 下游 API（推送信息）</span>
           </template>
           <div class="api-box">
             <p><strong>接口地址：</strong><code>POST /api/outflow</code></p>
-            <p><strong>调用方：</strong>我们调用下游接口推送线索</p>
-            <p><strong>功能：</strong>调用下游API推送线索给他们</p>
+            <p><strong>调用方：</strong>我们调用下游接口推送信息</p>
+            <p><strong>功能：</strong>调用下游API推送信息给他们</p>
             <div class="api-example">
               <p>请求示例：</p>
               <pre>{
