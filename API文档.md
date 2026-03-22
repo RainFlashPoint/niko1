@@ -10,121 +10,49 @@
 | 基础URL | `https://api.example.com` |
 | 数据格式 | JSON |
 | 编码 | UTF-8 |
-| 签名算法 | MD5 |
 
 ### 1.2 接口列表
 
-#### 上游接口（外部调用我们）
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/v1/auth/register | POST | 上游注册 |
-| /api/v1/auth/login | POST | 上游登录 |
-| /api/v1/inflow/push | POST | 推送线索 |
-| /api/v1/inflow/batch | POST | 批量推送线索 |
-| /api/v1/channel/info | GET | 渠道信息 |
-| /api/v1/channel/stats | GET | 渠道统计 |
-| /api/v1/channel/bill | GET | 账单明细 |
-
-#### 下游接口（外部调用我们）
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/v1/client/register | POST | 下游注册 |
-| /api/v1/client/login | POST | 下游登录 |
-| /api/v1/client/callback | POST | 接收线索回调 |
-| /api/v1/client/callback/config | POST | 配置回调地址 |
-| /api/v1/client/stats | GET | 推送统计 |
-| /api/v1/client/balance | GET | 账户余额 |
+| 接口 | 方法 | 加密方式 | 说明 |
+|------|------|----------|------|
+| /api/v1/query/collision | POST | MD5 | 撞库查询 |
+| /api/v1/query/collision/batch | POST | MD5 | 批量撞库 |
+| /api/v1/entry/create | POST | RSA | 进件提交 |
+| /api/v1/entry/batch | POST | RSA | 批量进件 |
+| /api/v1/entry/status | GET | - | 进件状态查询 |
 
 ---
 
-## 二、上游 API
+## 二、撞库接口（MD5）
 
-### 2.1 上游注册
-
-```
-POST /api/v1/auth/register
-```
-
-**请求体**
-```json
-{
-  "username": "channel_a",
-  "password": "password123",
-  "company": "渠道A公司",
-  "contact": "张经理",
-  "phone": "13800138000",
-  "email": "zhang@example.com"
-}
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "appId": "uk_abc123",
-    "appSecret": "secret_xyz789",
-    "username": "channel_a"
-  }
-}
-```
-
----
-
-### 2.2 上游登录
+### 2.1 单条撞库
 
 ```
-POST /api/v1/auth/login
-```
-
-**请求体**
-```json
-{
-  "username": "channel_a",
-  "password": "password123"
-}
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expiresIn": 7200
-  }
-}
-```
-
----
-
-### 2.3 推送线索
-
-```
-POST /api/v1/inflow/push
+POST /api/v1/query/collision
 ```
 
 **请求头**
 | 参数 | 说明 |
 |------|------|
-| Authorization | Bearer {token} |
+| Content-Type | application/json |
+| X-App-Id | 渠道标识 |
 | X-Signature | MD5签名 |
 
 **请求体**
 ```json
 {
+  "idCard": "110101199001011234",
   "phone": "13800138000",
-  "name": "张三",
-  "amount": "50000",
-  "area": "北京",
-  "gender": "男",
-  "age": 35,
-  "income": "20000",
-  "remark": "备注信息"
+  "name": "张三"
 }
 ```
+
+**字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| idCard | string | ✅ | 身份证号（MD5加密传输） |
+| phone | string | ✅ | 手机号（MD5加密传输） |
+| name | string | ✅ | 姓名（MD5加密传输） |
 
 **响应**
 ```json
@@ -132,35 +60,34 @@ POST /api/v1/inflow/push
   "code": 0,
   "message": "success",
   "data": {
-    "leadId": "LD20240320001",
-    "phone": "13800138000",
-    "receiveTime": "2024-01-15T14:30:00Z"
+    "queryId": "Q20240320001",
+    "result": {
+      "totalCount": 3,
+      "platforms": [
+        {"name": "平台A", "count": 2, "overdueCount": 0},
+        {"name": "平台B", "count": 1, "overdueCount": 1}
+      ],
+      "riskLevel": "中风险"
+    },
+    "queryTime": "2024-01-15T14:30:00Z"
   }
 }
 ```
 
 ---
 
-### 2.4 批量推送线索
+### 2.2 批量撞库
 
 ```
-POST /api/v1/inflow/batch
+POST /api/v1/query/collision/batch
 ```
 
 **请求体**
 ```json
 {
-  "leads": [
-    {
-      "phone": "13800138000",
-      "name": "张三",
-      "amount": "50000"
-    },
-    {
-      "phone": "13900139000",
-      "name": "李四",
-      "amount": "30000"
-    }
+  "dataList": [
+    {"idCard": "xxx", "phone": "xxx", "name": "xxx"},
+    {"idCard": "xxx", "phone": "xxx", "name": "xxx"}
   ]
 }
 ```
@@ -169,14 +96,13 @@ POST /api/v1/inflow/batch
 ```json
 {
   "code": 0,
-  "message": "success",
   "data": {
-    "total": 2,
-    "success": 2,
+    "total": 10,
+    "success": 10,
     "failed": 0,
     "results": [
-      { "phone": "13800138000", "leadId": "LD20240320001", "status": "success" },
-      { "phone": "13900139000", "leadId": "LD20240320002", "status": "success" }
+      {"queryId": "Q001", "status": "success", "result": {...}},
+      {"queryId": "Q002", "status": "success", "result": {...}}
     ]
   }
 }
@@ -184,220 +110,83 @@ POST /api/v1/inflow/batch
 
 ---
 
-### 2.5 渠道信息
+## 三、进件接口（RSA）
+
+### 3.1 进件提交
 
 ```
-GET /api/v1/channel/info
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "data": {
-    "appId": "uk_abc123",
-    "company": "渠道A公司",
-    "contact": "张经理",
-    "phone": "13800138000",
-    "status": "active",
-    "createTime": "2024-01-01T00:00:00Z"
-  }
-}
-```
-
----
-
-### 2.6 渠道统计
-
-```
-GET /api/v1/channel/stats?date=2024-01-15
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "data": {
-    "today": {
-      "pushCount": 156,
-      "successCount": 152,
-      "failCount": 4
-    },
-    "month": {
-      "pushCount": 4560,
-      "successCount": 4480,
-      "failCount": 80
-    }
-  }
-}
-```
-
----
-
-### 2.7 账单明细
-
-```
-GET /api/v1/channel/bill?startDate=2024-01-01&endDate=2024-01-15
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "data": {
-    "list": [
-      {
-        "date": "2024-01-15",
-        "quantity": 156,
-        "unitPrice": 5.0,
-        "amount": 780.0,
-        "status": "pending"
-      }
-    ],
-    "total": 4560.0,
-    "pending": 2340.0,
-    "paid": 2220.0
-  }
-}
-```
-
----
-
-## 三、下游 API
-
-### 3.1 下游注册
-
-```
-POST /api/v1/client/register
-```
-
-**请求体**
-```json
-{
-  "username": "client_zhang",
-  "password": "password123",
-  "company": "客户张三公司",
-  "contact": "李总",
-  "phone": "13900139000",
-  "email": "li@example.com"
-}
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "clientId": "client_001",
-    "apiKey": "sk_live_abc123****xyz",
-    "username": "client_zhang"
-  }
-}
-```
-
----
-
-### 3.2 下游登录
-
-```
-POST /api/v1/client/login
-```
-
-**请求体**
-```json
-{
-  "username": "client_zhang",
-  "password": "password123"
-}
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expiresIn": 7200
-  }
-}
-```
-
----
-
-### 3.3 配置回调地址
-
-```
-POST /api/v1/client/callback/config
-```
-
-**请求体**
-```json
-{
-  "callbackUrl": "https://your-server.com/webhook",
-  "callbackSecret": "your_webhook_secret"
-}
-```
-
-**响应**
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "callbackUrl": "https://your-server.com/webhook",
-    "status": "active"
-  }
-}
-```
-
----
-
-### 3.4 接收线索回调
-
-**这是我们主动调用的接口，下游需实现**
-
-```
-POST 下游回调地址
+POST /api/v1/entry/create
 ```
 
 **请求头**
 | 参数 | 说明 |
 |------|------|
 | Content-Type | application/json |
+| X-App-Id | 渠道标识 |
 | X-Signature | MD5签名 |
+
+**请求体（RSA加密）**
+```json
+{
+  "encryptedData": "BASE64编码的RSA加密数据"
+}
+```
+
+**加密数据结构（加密前）**
+```json
+{
+  "basicInfo": {
+    "name": "张三",
+    "idCard": "110101199001011234",
+    "phone": "13800138000",
+    "gender": "男",
+    "age": 35,
+    "education": "本科",
+    "marriage": "已婚"
+  },
+  "financeInfo": {
+    "income": "20000",
+    "socialSecurity": true,
+    "housingFund": true,
+    "carOwner": false
+  },
+  "loanInfo": {
+    "amount": "50000",
+    "purpose": "经营周转",
+    "term": 12
+  }
+}
+```
+
+**响应**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "entryId": "E20240320001",
+    "status": "pending",
+    "createTime": "2024-01-15T14:30:00Z"
+  }
+}
+```
+
+---
+
+### 3.2 批量进件
+
+```
+POST /api/v1/entry/batch
+```
 
 **请求体**
 ```json
 {
-  "leadId": "LD20240320001",
-  "phone": "13800138000",
-  "name": "张三",
-  "amount": "50000",
-  "area": "北京",
-  "gender": "男",
-  "age": 35,
-  "income": "20000",
-  "source": "渠道A",
-  "pushTime": "2024-01-15T14:30:05Z"
+  "dataList": [
+    {"encryptedData": "BASE64..."},
+    {"encryptedData": "BASE64..."}
+  ]
 }
-```
-
-**下游响应**
-```json
-{
-  "code": 0,
-  "message": "success"
-}
-```
-
----
-
-### 3.5 推送统计
-
-```
-GET /api/v1/client/stats?date=2024-01-15
 ```
 
 **响应**
@@ -405,26 +194,23 @@ GET /api/v1/client/stats?date=2024-01-15
 {
   "code": 0,
   "data": {
-    "today": {
-      "receivedCount": 45,
-      "successCount": 42,
-      "failCount": 3
-    },
-    "month": {
-      "receivedCount": 1350,
-      "successCount": 1290,
-      "failCount": 60
-    }
+    "total": 5,
+    "success": 5,
+    "failed": 0,
+    "results": [
+      {"entryId": "E001", "status": "pending"},
+      {"entryId": "E002", "status": "pending"}
+    ]
   }
 }
 ```
 
 ---
 
-### 3.6 账户余额
+### 3.3 进件状态查询
 
 ```
-GET /api/v1/client/balance
+GET /api/v1/entry/status?entryId=E20240320001
 ```
 
 **响应**
@@ -432,66 +218,148 @@ GET /api/v1/client/balance
 {
   "code": 0,
   "data": {
-    "balance": 5000.0,
-    "freeze": 1000.0,
-    "available": 4000.0,
-    "todayCost": 450.0
+    "entryId": "E20240320001",
+    "status": "approved",
+    "amount": 50000,
+    "term": 12,
+    "updateTime": "2024-01-15T16:00:00Z"
   }
 }
 ```
 
+**状态说明**
+| status | 说明 |
+|--------|------|
+| pending | 待审核 |
+| reviewing | 审核中 |
+| approved | 已通过 |
+| rejected | 已拒绝 |
+| disbursed | 已放款 |
+
 ---
 
-## 四、错误码
+## 四、加密说明
 
-| code | message | 说明 |
-|------|---------|------|
-| 0 | success | 成功 |
-| 1001 | missing parameter | 缺少必填参数 |
-| 1002 | invalid phone | 手机号格式错误 |
-| 1003 | signature error | 签名错误 |
-| 1004 | channel disabled | 渠道已禁用 |
-| 1005 | rate limit | 请求过于频繁 |
-| 2001 | unauthorized | 未授权 |
-| 2002 | token expired | Token过期 |
-| 3001 | callback failed | 回调失败 |
-| 3002 | insufficient balance | 余额不足 |
+### 4.1 MD5 撞库加密
+
+**算法**
+```
+MD5(身份证号 + 手机号 + 姓名 + AppSecret)
+```
+
+**示例（Node.js）**
+```javascript
+const crypto = require('crypto');
+
+function md5Encrypt(idCard, phone, name, secret) {
+  const raw = idCard + phone + name + secret;
+  return crypto.createHash('md5').update(raw).hexdigest();
+}
+
+// 撞库加密
+const encryptedData = md5Encrypt('110101199001011234', '13800138000', '张三', 'your_secret');
+```
+
+---
+
+### 4.2 RSA 进件加密
+
+**算法**
+```
+RSA公钥加密 + Base64编码
+```
+
+**示例（Node.js）**
+```javascript
+const crypto = require('crypto');
+
+const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC5h...
+-----END PUBLIC KEY-----`;
+
+// RSA 加密
+function rsaEncrypt(data, publicKey) {
+  const encrypted = crypto.publicEncrypt(
+    { key: publicKey, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING },
+    Buffer.from(JSON.stringify(data))
+  );
+  return encrypted.toString('base64');
+}
+
+// 进件加密
+const rawData = {
+  basicInfo: { name: '张三', idCard: '110101199001011234', phone: '13800138000' },
+  financeInfo: { income: '20000' },
+  loanInfo: { amount: '50000', term: 12 }
+};
+
+const encryptedData = rsaEncrypt(rawData, PUBLIC_KEY);
+```
+
+**示例（Python）**
+```python
+import base64
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+
+PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC5h...
+-----END PUBLIC KEY-----"""
+
+def rsa_encrypt(data, public_key):
+    key = RSA.import_key(public_key)
+    cipher = PKCS1_OAEP.new(key)
+    encrypted = cipher.encrypt(json.dumps(data).encode())
+    return base64.b64encode(encrypted).decode()
+
+# 使用
+raw_data = {
+    "basicInfo": {"name": "张三", "idCard": "110101199001011234"},
+    "loanInfo": {"amount": "50000"}
+}
+encrypted = rsa_encrypt(raw_data, PUBLIC_KEY)
+```
 
 ---
 
 ## 五、签名算法
 
-### 5.1 生成签名
+### 5.1 请求签名
 
 ```
-Signature = MD5(JSON.stringify(body) + Secret)
+Signature = MD5(请求体JSON + AppSecret)
 ```
 
-**Node.js 示例**
+**示例**
 ```javascript
-const crypto = require('crypto');
-
-function generateSignature(body, secret) {
-  const signString = JSON.stringify(body) + secret;
-  return crypto.createHash('md5').update(signString).digest('hex');
+function sign(body, secret) {
+  return crypto.createHash('md5')
+    .update(JSON.stringify(body) + secret).digest('hex');
 }
-```
-
-**Python 示例**
-```python
-import hashlib
-import json
-
-def generate_signature(body, secret):
-    sign_string = json.dumps(body, ensure_ascii=False) + secret
-    return hashlib.md5(sign_string.encode('utf-8')).hexdigest()
 ```
 
 ---
 
-## 六、Demo 代码
+## 六、错误码
 
-### 6.1 上游推送（Node.js）
+| code | message | 说明 |
+|------|---------|------|
+| 0 | success | 成功 |
+| 1001 | missing parameter | 缺少参数 |
+| 1002 | invalid format | 格式错误 |
+| 1003 | signature error | 签名错误 |
+| 1004 | channel disabled | 渠道禁用 |
+| 1005 | rate limit | 频率限制 |
+| 2001 | encryption error | 加密失败 |
+| 2002 | decryption error | 解密失败 |
+| 3001 | query failed | 查询失败 |
+| 3002 | entry failed | 进件失败 |
+
+---
+
+## 七、Demo 代码
+
+### 7.1 撞库查询（Node.js）
 
 ```javascript
 const axios = require('axios');
@@ -503,98 +371,105 @@ const CONFIG = {
   APP_SECRET: 'your_app_secret'
 };
 
-function sign(body, secret) {
-  return crypto.createHash('md5')
-    .update(JSON.stringify(body) + secret).digest('hex');
+function md5(str) {
+  return crypto.createHash('md5').update(str).hexdigest();
 }
 
-async function login() {
-  const res = await axios.post(`${CONFIG.API_URL}/api/v1/auth/login`, {
-    username: CONFIG.APP_ID,
-    password: 'password123'
-  });
-  return res.data.data.token;
+function sign(body) {
+  return md5(JSON.stringify(body) + CONFIG.APP_SECRET);
 }
 
-async function pushLead(token, phone, name) {
-  const body = { phone, name, amount: '50000', area: '北京' };
-  const headers = {
-    'Authorization': `Bearer ${token}`,
-    'X-Signature': sign(body, CONFIG.APP_SECRET)
-  };
-  return axios.post(`${CONFIG.API_URL}/api/v1/inflow/push`, body, { headers });
+async function queryCollision(idCard, phone, name) {
+  const body = { idCard, phone, name };
+  const response = await axios.post(
+    `${CONFIG.API_URL}/api/v1/query/collision`,
+    body,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-App-Id': CONFIG.APP_ID,
+        'X-Signature': sign(body)
+      }
+    }
+  );
+  return response.data;
 }
 
-async function main() {
-  const token = await login();
-  const result = await pushLead(token, '13800138000', '张三');
-  console.log(result.data);
-}
-
-main();
+// 使用
+queryCollision('110101199001011234', '13800138000', '张三')
+  .then(console.log);
 ```
 
-### 6.2 下游接收（Node.js）
+### 7.2 进件提交（Node.js）
 
 ```javascript
-const express = require('express');
+const axios = require('axios');
 const crypto = require('crypto');
-const app = express();
 
-app.use(express.json());
+const CONFIG = {
+  API_URL: 'https://api.example.com',
+  APP_ID: 'your_app_id',
+  APP_SECRET: 'your_app_secret',
+  RSA_PUBLIC_KEY: `-----BEGIN PUBLIC KEY-----\n...`
+};
 
-const WEBHOOK_SECRET = 'your_webhook_secret';
+function sign(body) {
+  return crypto.createHash('md5')
+    .update(JSON.stringify(body) + CONFIG.APP_SECRET).hexdigest();
+}
 
-app.post('/webhook', (req, res) => {
-  const sig = req.headers['x-signature'];
-  const expected = crypto.createHash('md5')
-    .update(JSON.stringify(req.body) + WEBHOOK_SECRET).digest('hex');
-  
-  if (sig !== expected) {
-    return res.status(401).json({ code: 1003, message: 'signature error' });
-  }
-  
-  const { leadId, phone, name, amount } = req.body;
-  console.log('收到线索:', { leadId, phone, name, amount });
-  
-  res.json({ code: 0, message: 'success' });
-});
+function rsaEncrypt(data) {
+  const encrypted = crypto.publicEncrypt(
+    { key: CONFIG.RSA_PUBLIC_KEY, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING },
+    Buffer.from(JSON.stringify(data))
+  );
+  return encrypted.toString('base64');
+}
 
-app.listen(3000, () => console.log('服务启动: 3000'));
+async function createEntry(data) {
+  const encryptedData = rsaEncrypt(data);
+  const response = await axios.post(
+    `${CONFIG.API_URL}/api/v1/entry/create`,
+    { encryptedData },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-App-Id': CONFIG.APP_ID,
+        'X-Signature': sign({ encryptedData })
+      }
+    }
+  );
+  return response.data;
+}
+
+// 使用
+const entryData = {
+  basicInfo: { name: '张三', idCard: '110101199001011234', phone: '13800138000' },
+  financeInfo: { income: '20000' },
+  loanInfo: { amount: '50000', term: 12 }
+};
+
+createEntry(entryData).then(console.log);
 ```
 
 ---
 
-## 七、测试
+## 八、测试
 
 ### 测试账号
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
-| 上游 | test_upstream | test123456 |
-| 下游 | test_downstream | test123456 |
+| AppId | AppSecret |
+|-------|-----------|
+| test_001 | test_secret_001 |
 
 ### 测试命令
 ```bash
-# 启动本地 Mock Server
-node server/mock-api.js
-
-# 测试登录
-curl -X POST http://localhost:3000/api/v1/auth/login \
+# 撞库测试
+curl -X POST https://api.example.com/api/v1/query/collision \
   -H "Content-Type: application/json" \
-  -d '{"username":"test_upstream","password":"test123456"}'
+  -H "X-App-Id: test_001" \
+  -H "X-Signature: $(echo -n '{"idCard":"xxx"}test_secret_001' | md5)" \
+  -d '{"idCard":"xxx","phone":"xxx","name":"xxx"}'
 ```
-
----
-
-## 八、注意事项
-
-| 事项 | 说明 |
-|------|------|
-| 请求频率 | 不超过 10 次/秒 |
-| Token有效期 | 2小时 |
-| 签名密钥 | 请妥善保管 |
-| 重试机制 | 失败自动重试 3 次 |
-| 数据安全 | 敏感信息建议加密 |
 
 ---
 
