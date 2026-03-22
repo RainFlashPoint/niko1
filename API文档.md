@@ -74,6 +74,13 @@ POST /api/v1/query/collision
 }
 ```
 
+**结果说明**
+| 字段 | 说明 |
+|------|------|
+| totalCount | 总命中平台数 |
+| platforms | 各平台命中情况 |
+| riskLevel | 风险等级（低风险/中风险/高风险） |
+
 ---
 
 ### 2.2 批量撞库
@@ -112,7 +119,22 @@ POST /api/v1/query/collision/batch
 
 ## 三、进件接口（RSA）
 
-### 3.1 进件提交
+### 3.1 RSA 公钥
+
+进件接口使用 RSA 公钥加密，**公钥由平台预置提供**。
+
+**公钥**
+```
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC5h...
+-----END PUBLIC KEY-----
+```
+
+> **注意**：公钥请联系管理员获取
+
+---
+
+### 3.2 进件提交
 
 ```
 POST /api/v1/entry/create
@@ -158,6 +180,24 @@ POST /api/v1/entry/create
 }
 ```
 
+**字段说明**
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| basicInfo.name | string | ✅ | 姓名 |
+| basicInfo.idCard | string | ✅ | 身份证号 |
+| basicInfo.phone | string | ✅ | 手机号 |
+| basicInfo.gender | string | - | 性别 |
+| basicInfo.age | int | - | 年龄 |
+| basicInfo.education | string | - | 学历 |
+| basicInfo.marriage | string | - | 婚姻状况 |
+| financeInfo.income | string | - | 月收入 |
+| financeInfo.socialSecurity | bool | - | 是否有社保 |
+| financeInfo.housingFund | bool | - | 是否有公积金 |
+| financeInfo.carOwner | bool | - | 是否有车 |
+| loanInfo.amount | string | ✅ | 期望额度 |
+| loanInfo.purpose | string | - | 借款用途 |
+| loanInfo.term | int | - | 期限（月） |
+
 **响应**
 ```json
 {
@@ -173,7 +213,7 @@ POST /api/v1/entry/create
 
 ---
 
-### 3.2 批量进件
+### 3.3 批量进件
 
 ```
 POST /api/v1/entry/batch
@@ -207,7 +247,7 @@ POST /api/v1/entry/batch
 
 ---
 
-### 3.3 进件状态查询
+### 3.4 进件状态查询
 
 ```
 GET /api/v1/entry/status?entryId=E20240320001
@@ -299,6 +339,7 @@ const encryptedData = rsaEncrypt(rawData, PUBLIC_KEY);
 **示例（Python）**
 ```python
 import base64
+import json
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
@@ -467,7 +508,7 @@ createEntry(entryData).then(console.log);
 curl -X POST https://api.example.com/api/v1/query/collision \
   -H "Content-Type: application/json" \
   -H "X-App-Id: test_001" \
-  -H "X-Signature: $(echo -n '{"idCard":"xxx"}test_secret_001' | md5)" \
+  -H "X-Signature: xxx" \
   -d '{"idCard":"xxx","phone":"xxx","name":"xxx"}'
 ```
 
