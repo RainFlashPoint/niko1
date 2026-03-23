@@ -18,9 +18,6 @@
           </el-button>
         </el-form-item>
       </el-form>
-      <div class="tips">
-        <p>测试账号: admin / 123456</p>
-      </div>
     </div>
   </div>
 </template>
@@ -34,6 +31,12 @@ import { readStorage, saveStorage, initDefaultData } from '../utils/storage'
 const router = useRouter()
 const loading = ref(false)
 const form = ref({ username: '', password: '', remember: false })
+
+// 硬编码的用户名密码（不显示在页面上）
+const VALID_USERS = [
+  { username: 'admin', password: 'admin123', name: '管理员', role: 'admin' },
+  { username: 'zhangsan', password: 'zhangsan123', name: '张三', role: 'user' },
+]
 
 onMounted(() => {
   // 初始化默认数据
@@ -62,12 +65,11 @@ function handleLogin() {
   loading.value = true
   
   setTimeout(() => {
-    const users = readStorage('crm_users') || []
-    const user = users.find(u => u.username === form.value.username && u.password === form.value.password)
+    const user = VALID_USERS.find(u => u.username === form.value.username && u.password === form.value.password)
     
     if (user) {
       // 保存用户信息
-      const userInfo = { userId: user.id, username: user.username, displayName: user.name, role: user.role }
+      const userInfo = { userId: user.username, username: user.username, displayName: user.name, role: user.role }
       saveStorage('crm_user', userInfo)
       saveStorage('crm_last_login', new Date().toISOString())
       
@@ -109,12 +111,5 @@ function handleLogin() {
   text-align: center;
   color: #333;
   margin-bottom: 30px;
-}
-
-.tips {
-  text-align: center;
-  color: #888;
-  font-size: 12px;
-  margin-top: 20px;
 }
 </style>
