@@ -7,37 +7,29 @@
 
     <el-table :data="filteredData" style="width: 100%; margin-top: 20px">
       <el-table-column prop="name" label="客户名称" />
-      <el-table-column prop="contact" label="联系人" />
       <el-table-column prop="phone" label="手机号" />
-      <el-table-column prop="type" label="客户类型">
-        <template #default="{ row }">
-          <el-tag>{{ row.type === 'upstream' ? '上游' : '下游' }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="level" label="客户等级">
-        <template #default="{ row }">
-          <el-tag :type="row.level === 'A' ? 'danger' : row.level === 'B' ? 'warning' : 'info'">
-            {{ row.level }}级
-          </el-tag>
-        </template>
+      <el-table-column prop="city" label="城市" />
+      <el-table-column prop="loanAmount" label="申请额度">
+        <template #default="{ row }">¥{{ row.loanAmount?.toLocaleString() }}</template>
       </el-table-column>
       <el-table-column prop="status" label="状态">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'active' ? 'success' : 'info'">
-            {{ row.status === 'active' ? '正常' : '已流失' }}
-          </el-tag>
+          <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="tags" label="标签">
+        <template #default="{ row }">
+          <el-tag v-for="tag in row.tags" :key="tag" size="small" style="margin-right: 4px">{{ tag }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="200">
         <template #default="{ row }">
           <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-          <el-button size="small" @click="viewRecord(row)">跟进</el-button>
           <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <!-- 添加/编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑客户' : '添加客户'" width="600px">
       <el-form :model="form" label-width="80px">
         <el-row :gutter="20">
@@ -47,47 +39,47 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="联系人">
-              <el-input v-model="form.contact" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
             <el-form-item label="手机号">
               <el-input v-model="form.phone" />
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="客户类型">
-              <el-select v-model="form.type" style="width: 100%">
-                <el-option label="上游" value="upstream" />
-                <el-option label="下游" value="downstream" />
-              </el-select>
+            <el-form-item label="城市">
+              <el-input v-model="form.city" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="申请额度">
+              <el-input-number v-model="form.loanAmount" :min="0" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="客户等级">
-              <el-select v-model="form.level" style="width: 100%">
-                <el-option label="A级" value="A" />
-                <el-option label="B级" value="B" />
-                <el-option label="C级" value="C" />
+            <el-form-item label="状态">
+              <el-select v-model="form.status" style="width: 100%">
+                <el-option label="新客户" value="new" />
+                <el-option label="已联系" value="contacted" />
+                <el-option label="已通过" value="approved" />
+                <el-option label="已拒绝" value="rejected" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="状态">
-              <el-select v-model="form.status" style="width: 100%">
-                <el-option label="正常" value="active" />
-                <el-option label="已流失" value="inactive" />
+            <el-form-item label="标签">
+              <el-select v-model="form.tags" multiple style="width: 100%">
+                <el-option label="高意向" value="高意向" />
+                <el-option label="低意向" value="低意向" />
+                <el-option label="已成交" value="已成交" />
+                <el-option label="待跟进" value="待跟进" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
         <el-form-item label="备注">
-          <el-input v-model="form.remark" type="textarea" rows="3" />
+          <el-input v-model="form.remark" type="textarea" rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -99,21 +91,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { readStorage, saveStorage, createId } from '../utils/storage'
 
 const search = ref('')
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 
-const tableData = ref([
-  { id: 1, name: '公司A', contact: '张三', phone: '13800138001', type: 'upstream', level: 'A', status: 'active', remark: '重要客户' },
-  { id: 2, name: '公司B', contact: '李四', phone: '13800138002', type: 'downstream', level: 'B', status: 'active', remark: '' },
-  { id: 3, name: '公司C', contact: '王五', phone: '13800138003', type: 'upstream', level: 'C', status: 'active', remark: '待跟进' },
-  { id: 4, name: '公司D', contact: '赵六', phone: '13800138004', type: 'downstream', level: 'B', status: 'inactive', remark: '已流失' },
-])
+const tableData = ref([])
 
-const form = ref({ id: null, name: '', contact: '', phone: '', type: 'downstream', level: 'C', status: 'active', remark: '' })
+const form = ref({
+  id: null, name: '', phone: '', city: '', loanAmount: 0, status: 'new', tags: [], remark: ''
+})
 
 const filteredData = computed(() => {
   if (!search.value) return tableData.value
@@ -123,9 +113,23 @@ const filteredData = computed(() => {
   )
 })
 
+function getStatusType(status) {
+  const types = { new: '', contacted: 'warning', approved: 'success', rejected: 'danger' }
+  return types[status] || ''
+}
+
+function getStatusText(status) {
+  const texts = { new: '新客户', contacted: '已联系', approved: '已通过', rejected: '已拒绝' }
+  return texts[status] || status
+}
+
+onMounted(() => {
+  tableData.value = readStorage('crm_customers') || []
+})
+
 function handleAdd() {
   isEdit.value = false
-  form.value = { id: null, name: '', contact: '', phone: '', type: 'downstream', level: 'C', status: 'active', remark: '' }
+  form.value = { id: null, name: '', phone: '', city: '', loanAmount: 0, status: 'new', tags: [], remark: '' }
   dialogVisible.value = true
 }
 
@@ -137,33 +141,37 @@ function handleEdit(row) {
 
 function handleSave() {
   if (!form.value.name || !form.value.phone) {
-    ElMessage.warning('请填写完整信息')
+    ElMessage.warning('请填写客户名称和手机号')
     return
   }
   
+  const now = new Date().toISOString()
+  
   if (isEdit.value) {
     const idx = tableData.value.findIndex(d => d.id === form.value.id)
-    if (idx !== -1) tableData.value[idx] = { ...form.value }
+    if (idx !== -1) {
+      tableData.value[idx] = { ...form.value, updatedAt: now }
+    }
     ElMessage.success('保存成功')
   } else {
-    form.value.id = Date.now()
+    form.value.id = createId()
+    form.value.createdAt = now
+    form.value.updatedAt = now
     tableData.value.push({ ...form.value })
     ElMessage.success('添加成功')
   }
+  
+  saveStorage('crm_customers', tableData.value)
   dialogVisible.value = false
 }
 
 function handleDelete(row) {
-  ElMessageBox.confirm(`确定删除客户 ${row.name} 吗?`, '提示', {
-    type: 'warning'
-  }).then(() => {
-    tableData.value = tableData.value.filter(d => d.id !== row.id)
-    ElMessage.success('删除成功')
-  }).catch(() => {})
-}
-
-function viewRecord(row) {
-  ElMessage.info(`查看 ${row.name} 的跟进记录`)
+  ElMessageBox.confirm(`确定删除客户 ${row.name} 吗?`, '提示', { type: 'warning' })
+    .then(() => {
+      tableData.value = tableData.value.filter(d => d.id !== row.id)
+      saveStorage('crm_customers', tableData.value)
+      ElMessage.success('删除成功')
+    }).catch(() => {})
 }
 </script>
 

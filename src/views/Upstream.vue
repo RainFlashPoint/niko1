@@ -7,13 +7,14 @@
 
     <el-table :data="filteredData" style="width: 100%; margin-top: 20px">
       <el-table-column prop="name" label="上游名称" />
-      <el-table-column prop="type" label="类型" />
-      <el-table-column prop="rate" label="分成比例">
+      <el-table-column prop="platform" label="渠道平台" />
+      <el-table-column prop="contact" label="联系人" />
+      <el-table-column prop="contactPhone" label="联系电话" />
+      <el-table-column prop="costPerLead" label="单条成本">
         <template #default="{ row }">
-          {{ row.rate }}%
+          ¥{{ row.costPerLead }}
         </template>
       </el-table-column>
-      <el-table-column prop="dailyLimit" label="日限额" />
       <el-table-column prop="status" label="状态">
         <template #default="{ row }">
           <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
@@ -32,23 +33,32 @@
     </el-table>
 
     <!-- 添加/编辑弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑上游' : '添加上游'" width="500px">
-      <el-form :model="form" label-width="80px">
-        <el-form-item label="上游名称">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑上游' : '添加上游'" width="600px">
+      <el-form :model="form" label-width="100px" :rules="rules" ref="formRef">
+        <el-form-item label="上游名称" prop="name">
           <el-input v-model="form.name" />
         </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="form.type" style="width: 100%">
-            <el-option label="渠道A" value="channel_a" />
-            <el-option label="渠道B" value="channel_b" />
-            <el-option label="直客" value="direct" />
+        <el-form-item label="渠道平台" prop="platform">
+          <el-select v-model="form.platform" style="width: 100%">
+            <el-option label="渠道A" value="渠道A" />
+            <el-option label="渠道B" value="渠道B" />
+            <el-option label="直客" value="直客" />
           </el-select>
         </el-form-item>
-        <el-form-item label="分成比例">
-          <el-input-number v-model="form.rate" :min="0" :max="100" />
+        <el-form-item label="联系人" prop="contact">
+          <el-input v-model="form.contact" />
         </el-form-item>
-        <el-form-item label="日限额">
-          <el-input v-model="form.dailyLimit" />
+        <el-form-item label="联系电话" prop="contactPhone">
+          <el-input v-model="form.contactPhone" />
+        </el-form-item>
+        <el-form-item label="API地址" prop="apiEndpoint">
+          <el-input v-model="form.apiEndpoint" placeholder="https://api.example.com" />
+        </el-form-item>
+        <el-form-item label="单条成本" prop="costPerLead">
+          <el-input-number v-model="form.costPerLead" :min="0" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea" rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -60,30 +70,47 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { readStorage, saveStorage, createId } from '../utils/storage'
 
 const search = ref('')
 const dialogVisible = ref(false)
 const isEdit = ref(false)
+const formRef = ref(null)
 
-const tableData = ref([
-  { id: 1, name: '上游A', type: '渠道A', rate: 70, dailyLimit: '10万', status: 'active' },
-  { id: 2, name: '上游B', type: '渠道B', rate: 65, dailyLimit: '5万', status: 'active' },
-  { id: 3, name: '上游C', type: '直客', rate: 80, dailyLimit: '8万', status: 'active' },
-  { id: 4, name: '上游D', type: '渠道A', rate: 60, dailyLimit: '3万', status: 'inactive' },
-])
+const tableData = ref([])
 
-const form = ref({ id: null, name: '', type: '', rate: 70, dailyLimit: '' })
+const rules = {
+  name: [{ required: true, message: '请输入上游名称', trigger: 'blur' }],
+  platform: [{ required: true, message: '请选择渠道平台', trigger: 'change' }],
+  costPerLead: [{ required: true, message: '请输入单条成本', trigger: 'blur' }],
+}
+
+const form = ref({ 
+  id: null, name: '', platform: '', contact: '', contactPhone: '', 
+  apiEndpoint: '', costPerLead: 50, remark: '', status: 'active' 
+})
 
 const filteredData = computed(() => {
   if (!search.value) return tableData.value
-  return tableData.value.filter(d => d.name.includes(search.value))
+  return tableData.value.filter(d => d.name.includes(search.value) || d.platform.includes(search.value))
 })
+
+onMounted(() => {
+  loadData()
+})
+
+function loadData() {
+  tableData.value = readStorage('crm_upstreams') || []
+}
 
 function handleAdd() {
   isEdit.value = false
-  form.value = { id: null, name: '', type: 'channel_a', rate: 70, dailyLimit: '' }
+  form.value = { 
+    id: null, name: '', platform: '渠道A', contact: '', contactPhone: '', 
+    apiEndpoint: '', costPerLead: 50, remark: '', status: 'active' 
+  }
   dialogVisible.value = true
 }
 
@@ -94,26 +121,35 @@ function handleEdit(row) {
 }
 
 function handleSave() {
-  if (!form.value.name) {
-    ElMessage.warning('请输入名称')
+  if (!form.value.name || !form.value.costPerLead) {
+    ElMessage.warning('请填写必填项')
     return
   }
   
+  const now = new Date().toISOString()
+  
   if (isEdit.value) {
     const idx = tableData.value.findIndex(d => d.id === form.value.id)
-    if (idx !== -1) tableData.value[idx] = { ...form.value }
+    if (idx !== -1) {
+      tableData.value[idx] = { ...form.value, updatedAt: now }
+    }
     ElMessage.success('保存成功')
   } else {
-    form.value.id = Date.now()
-    form.value.status = 'active'
+    form.value.id = createId()
+    form.value.createdAt = now
+    form.value.updatedAt = now
     tableData.value.push({ ...form.value })
     ElMessage.success('添加成功')
   }
+  
+  saveStorage('crm_upstreams', tableData.value)
   dialogVisible.value = false
 }
 
 function toggleStatus(row) {
   row.status = row.status === 'active' ? 'inactive' : 'active'
+  row.updatedAt = new Date().toISOString()
+  saveStorage('crm_upstreams', tableData.value)
   ElMessage.success(row.status === 'active' ? '已启用' : '已禁用')
 }
 </script>

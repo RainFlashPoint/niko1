@@ -10,6 +10,9 @@
           <el-input v-model="form.password" type="password" placeholder="密码" prefix="🔒" />
         </el-form-item>
         <el-form-item>
+          <el-checkbox v-model="form.remember">记住我</el-checkbox>
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" @click="handleLogin" :loading="loading" style="width: 100%">
             登录
           </el-button>
@@ -23,29 +26,58 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { readStorage, saveStorage, initDefaultData } from '../utils/storage'
 
 const router = useRouter()
 const loading = ref(false)
-const form = ref({ username: '', password: '' })
+const form = ref({ username: '', password: '', remember: false })
 
-// 模拟用户数据
-const mockUsers = [
-  { id: 1, name: '管理员', username: 'admin', password: '123456', role: 'admin' },
-  { id: 2, name: '张三', username: 'zhangsan', password: '123456', role: 'user' },
-  { id: 3, name: '李四', username: 'lisi', password: '123456', role: 'user' },
-]
+onMounted(() => {
+  // 初始化默认数据
+  initDefaultData()
+  
+  // 检查记住用户名
+  const remembered = localStorage.getItem('crm_remember_username')
+  if (remembered) {
+    form.value.username = remembered
+    form.value.remember = true
+  }
+  
+  // 检查是否已登录
+  const user = localStorage.getItem('crm_user')
+  if (user) {
+    router.push('/dashboard')
+  }
+})
 
 function handleLogin() {
+  if (!form.value.username || !form.value.password) {
+    ElMessage.warning('请输入用户名和密码')
+    return
+  }
+  
   loading.value = true
   
   setTimeout(() => {
-    const user = mockUsers.find(u => u.username === form.value.username && u.password === form.value.password)
+    const users = readStorage('crm_users') || []
+    const user = users.find(u => u.username === form.value.username && u.password === form.value.password)
     
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user))
+      // 保存用户信息
+      const userInfo = { userId: user.id, username: user.username, displayName: user.name, role: user.role }
+      saveStorage('crm_user', userInfo)
+      saveStorage('crm_last_login', new Date().toISOString())
+      
+      // 记住用户名
+      if (form.value.remember) {
+        localStorage.setItem('crm_remember_username', form.value.username)
+      } else {
+        localStorage.removeItem('crm_remember_username')
+      }
+      
       ElMessage.success('登录成功')
       router.push('/dashboard')
     } else {

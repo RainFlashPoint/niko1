@@ -6,13 +6,15 @@
 
     <el-table :data="tableData" style="width: 100%; margin-top: 20px">
       <el-table-column prop="name" label="规则名称" />
-      <el-table-column prop="upstream" label="上游" />
-      <el-table-column prop="downstream" label="下游" />
-      <el-table-column prop="flowRate" label="流量比例" />
+      <el-table-column prop="upstreamName" label="上游" />
+      <el-table-column prop="downstreamName" label="下游" />
+      <el-table-column prop="price" label="单价">
+        <template #default="{ row }">¥{{ row.price }}</template>
+      </el-table-column>
       <el-table-column prop="priority" label="优先级" />
       <el-table-column prop="status" label="状态">
         <template #default="{ row }">
-          <el-switch v-model="row.status" active-text="开启" inactive-text="关闭" />
+          <el-switch v-model="row.status" active-value="active" inactive-value="paused" />
         </template>
       </el-table-column>
       <el-table-column label="操作" width="150">
@@ -29,17 +31,17 @@
           <el-input v-model="form.name" />
         </el-form-item>
         <el-form-item label="选择上游">
-          <el-select v-model="form.upstream" style="width: 100%">
-            <el-option v-for="u in upstreams" :key="u" :label="u" :value="u" />
+          <el-select v-model="form.upstreamId" style="width: 100%">
+            <el-option v-for="u in upstreams" :key="u.id" :label="u.name" :value="u.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="选择下游">
-          <el-select v-model="form.downstream" style="width: 100%">
-            <el-option v-for="d in downstreams" :key="d" :label="d" :value="d" />
+          <el-select v-model="form.downstreamId" style="width: 100%">
+            <el-option v-for="d in downstreams" :key="d.id" :label="d.clientName" :value="d.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="流量比例">
-          <el-slider v-model="form.flowRate" :marks="{0: '0%', 50: '50%', 100: '100%'}" />
+        <el-form-item label="单价">
+          <el-input-number v-model="form.price" :min="0" />
         </el-form-item>
         <el-form-item label="优先级">
           <el-input-number v-model="form.priority" :min="1" :max="100" />
@@ -54,26 +56,36 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { readStorage, saveStorage, createId } from '../utils/storage'
 
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 
-const upstreams = ref(['上游A', '上游B', '上游C'])
-const downstreams = ref(['下游A', '下游B', '下游C', '下游D'])
+const upstreams = ref([])
+const downstreams = ref([])
+const tableData = ref([])
 
-const tableData = ref([
-  { id: 1, name: '规则1', upstream: '上游A', downstream: '下游A', flowRate: 80, priority: 1, status: true },
-  { id: 2, name: '规则2', upstream: '上游B', downstream: '下游B', flowRate: 60, priority: 2, status: true },
-  { id: 3, name: '规则3', upstream: '上游A', downstream: '下游C', flowRate: 50, priority: 3, status: false },
-])
+const form = ref({ id: null, name: '', upstreamId: '', downstreamId: '', price: 100, priority: 1, status: 'active' })
 
-const form = ref({ id: null, name: '', upstream: '', downstream: '', flowRate: 50, priority: 1 })
+onMounted(() => {
+  // 加载上游和下游列表
+  upstreams.value = readStorage('crm_upstreams') || []
+  downstreams.value = readStorage('crm_downstreams') || []
+  
+  // 加载分发规则并关联名称
+  const distributions = readStorage('crm_distributions') || []
+  tableData.value = distributions.map(d => ({
+    ...d,
+    upstreamName: upstreams.value.find(u => u.id === d.upstreamId)?.name || d.upstreamId,
+    downstreamName: downstreams.value.find(dn => dn.id === d.downstreamId)?.clientName || d.downstreamId
+  }))
+})
 
 function handleAdd() {
   isEdit.value = false
-  form.value = { id: null, name: '', upstream: '', downstream: '', flowRate: 50, priority: 1 }
+  form.value = { id: null, name: '', upstreamId: upstreams.value[0]?.id || '', downstreamId: downstreams.value[0]?.id || '', price: 100, priority: 1, status: 'active' }
   dialogVisible.value = true
 }
 
@@ -84,24 +96,41 @@ function handleEdit(row) {
 }
 
 function handleSave() {
-  if (!form.value.name || !form.value.upstream || !form.value.downstream) {
+  if (!form.value.name || !form.value.upstreamId || !form.value.downstreamId) {
     ElMessage.warning('请填写完整')
     return
   }
+  
+  const now = new Date().toISOString()
+  const data = { ...form.value, updatedAt: now }
+  
   if (isEdit.value) {
     const idx = tableData.value.findIndex(t => t.id === form.value.id)
-    if (idx !== -1) tableData.value[idx] = { ...form.value }
+    if (idx !== -1) {
+      data.upstreamName = upstreams.value.find(u => u.id === data.upstreamId)?.name
+      data.downstreamName = downstreams.value.find(d => d.id === data.downstreamId)?.clientName
+      tableData.value[idx] = data
+    }
   } else {
-    form.value.id = Date.now()
-    form.value.status = true
-    tableData.value.push({ ...form.value })
+    data.id = createId()
+    data.createdAt = now
+    data.upstreamName = upstreams.value.find(u => u.id === data.upstreamId)?.name
+    data.downstreamName = downstreams.value.find(d => d.id === data.downstreamId)?.clientName
+    tableData.value.push(data)
   }
+  
+  // 保存到localStorage
+  const saveData = tableData.value.map(({ upstreamName, downstreamName, ...rest }) => rest)
+  saveStorage('crm_distributions', saveData)
+  
   ElMessage.success('保存成功')
   dialogVisible.value = false
 }
 
 function handleDelete(row) {
   tableData.value = tableData.value.filter(t => t.id !== row.id)
+  const saveData = tableData.value.map(({ upstreamName, downstreamName, ...rest }) => rest)
+  saveStorage('crm_distributions', saveData)
   ElMessage.success('删除成功')
 }
 </script>
