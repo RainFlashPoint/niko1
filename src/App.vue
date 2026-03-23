@@ -74,11 +74,11 @@ const router = useRouter()
 const isLoginPage = computed(() => route.path === '/')
 
 const user = computed(() => {
-  const userStr = localStorage.getItem('user')
+  const userStr = localStorage.getItem('crm_user')
   return userStr ? JSON.parse(userStr) : null
 })
 
-const userName = computed(() => user.value?.name || '未登录')
+const userName = computed(() => user.value?.displayName || user.value?.name || '未登录')
 const isAdmin = computed(() => user.value?.role === 'admin')
 
 const pageTitle = computed(() => {
@@ -96,7 +96,7 @@ const pageTitle = computed(() => {
 
 const handleCommand = (command) => {
   if (command === 'logout') {
-    localStorage.removeItem('user')
+    localStorage.removeItem('crm_user')
     ElMessage.success('已退出登录')
     router.push('/')
   }

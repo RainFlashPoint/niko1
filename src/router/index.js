@@ -26,7 +26,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const userStr = localStorage.getItem('user')
+  const userStr = localStorage.getItem('crm_user')
   const user = userStr ? JSON.parse(userStr) : null
   
   if (to.path !== '/' && to.meta.requiresAuth && !user) {
