@@ -1,160 +1,223 @@
 <template>
   <div class="dashboard">
-    <el-row :gutter="20">
+    <!-- 统计卡片 -->
+    <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
         <div class="stat-card">
-          <div class="stat-title">今日信息</div>
-          <div class="stat-value" style="color: #1890ff;">423</div>
-          <div class="stat-change">↑ 12.5%</div>
+          <div class="stat-icon">📥</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.todayFlow }}</div>
+            <div class="stat-label">今日流量(MB)</div>
+          </div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
-          <div class="stat-title">已分发</div>
-          <div class="stat-value" style="color: #52c41a;">1,267</div>
-          <div class="stat-change">↑ 8.2%</div>
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.activeUsers }}</div>
+            <div class="stat-label">活跃用户</div>
+          </div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
-          <div class="stat-title">今日收入</div>
-          <div class="stat-value" style="color: #faad14;">¥2,845</div>
-          <div class="stat-change">↑ 5.2%</div>
+          <div class="stat-icon">💰</div>
+          <div class="stat-info">
+            <div class="stat-value">¥{{ stats.todayRevenue }}</div>
+            <div class="stat-label">今日收入</div>
+          </div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
-          <div class="stat-title">今日支出</div>
-          <div class="stat-value" style="color: #ff4d4f;">¥1,520</div>
-          <div class="stat-change down">↑ 3.1%</div>
+          <div class="stat-icon">📊</div>
+          <div class="stat-info">
+            <div class="stat-value">{{ stats.conversionRate }}%</div>
+            <div class="stat-label">转化率</div>
+          </div>
         </div>
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" style="margin-top: 20px;">
-      <el-col :span="16">
-        <el-card>
-          <template #header>
-            <span>流量趋势</span>
-          </template>
-          <div ref="trendChart" class="chart"></div>
-        </el-card>
+    <!-- 图表区域 -->
+    <el-row :gutter="20" style="margin-top: 20px">
+      <el-col :span="12">
+        <div class="chart-card">
+          <h3>流量趋势(最近7天)</h3>
+          <div class="chart-placeholder">
+            <div class="bar-chart">
+              <div v-for="(v, i) in flowTrend" :key="i" class="bar" :style="{ height: v + '%' }">
+                <span class="bar-label">{{ v }}%</span>
+              </div>
+            </div>
+            <div class="bar-x-axis">
+              <span v-for="(d, i) in flowDates" :key="i">{{ d }}</span>
+            </div>
+          </div>
+        </div>
       </el-col>
-      <el-col :span="8">
-        <el-card>
-          <template #header>
-            <span>上下游分布</span>
-          </template>
-          <div ref="pieChart" class="chart"></div>
-        </el-card>
+      <el-col :span="12">
+        <div class="chart-card">
+          <h3>收入分布</h3>
+          <div class="chart-placeholder">
+            <div class="pie-chart">
+              <div class="pie-center">¥{{ totalRevenue }}</div>
+            </div>
+            <div class="pie-legend">
+              <div v-for="(item, i) in revenueDist" :key="i" class="legend-item">
+                <span class="legend-color" :style="{ background: item.color }"></span>
+                <span>{{ item.name }}</span>
+                <span class="legend-value">¥{{ item.value }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </el-col>
     </el-row>
 
-    <el-card style="margin-top: 20px;">
-      <template #header>
-        <span>实时 API 调用</span>
-      </template>
-      <el-table :data="realtime" style="width: 100%">
-        <el-table-column prop="time" label="时间" width="180" />
-        <el-table-column prop="type" label="类型" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.type === '上行' ? 'success' : 'warning'">{{ row.type }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="source" label="来源/客户" />
-        <el-table-column prop="phone" label="手机号" width="140" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag type="success">成功</el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <!-- 最近订单 -->
+    <el-row :gutter="20" style="margin-top: 20px">
+      <el-col :span="24">
+        <div class="chart-card">
+          <h3>最近订单</h3>
+          <el-table :data="recentOrders" style="width: 100%">
+            <el-table-column prop="orderNo" label="订单号" width="180" />
+            <el-table-column prop="user" label="用户" />
+            <el-table-column prop="product" label="产品" />
+            <el-table-column prop="amount" label="金额">
+              <template #default="{ row }">
+                ¥{{ row.amount }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态">
+              <template #default="{ row }">
+                <el-tag :type="getStatusType(row.status)">{{ row.statusText }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="createdAt" label="时间" />
+          </el-table>
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import * as echarts from 'echarts'
+import { ref, computed } from 'vue'
 
-const realtime = ref([
-  { time: '14:32:15', type: '上行', source: '渠道A', phone: '138****1234', status: '成功' },
-  { time: '14:31:42', type: '下行', source: '客户张三', phone: '139****5678', status: '成功' },
-  { time: '14:30:58', type: '上行', source: '渠道B', phone: '137****9012', status: '成功' },
-  { time: '14:29:33', type: '下行', source: '客户李四', phone: '136****3456', status: '成功' },
-  { time: '14:28:17', type: '上行', source: '渠道C', phone: '135****7890', status: '成功' },
+const stats = ref({
+  todayFlow: '2.5G',
+  activeUsers: 156,
+  todayRevenue: '8,560',
+  conversionRate: 12.5
+})
+
+const flowTrend = ref([65, 78, 90, 85, 95, 88, 82])
+const flowDates = ref(['周一', '周二', '周三', '周四', '周五', '周六', '周日'])
+
+const revenueDist = ref([
+  { name: '上游分成', value: '4,280', color: '#409EFF' },
+  { name: '下游分成', value: '2,560', color: '#67C23A' },
+  { name: '服务费', value: '1,720', color: '#E6A23C' }
+])
+const totalRevenue = computed(() => stats.value.todayRevenue.replace(',', ''))
+
+const recentOrders = ref([
+  { orderNo: 'ORD20260323001', user: '张三', product: '流量包A', amount: 100, status: 'paid', statusText: '已支付', createdAt: '2026-03-23 14:30' },
+  { orderNo: 'ORD20260323002', user: '李四', product: '流量包B', amount: 200, status: 'pending', statusText: '待支付', createdAt: '2026-03-23 13:20' },
+  { orderNo: 'ORD20260323003', user: '王五', product: '流量包A', amount: 100, status: 'completed', statusText: '已完成', createdAt: '2026-03-23 12:15' },
+  { orderNo: 'ORD20260323004', user: '赵六', product: '流量包C', amount: 500, status: 'paid', statusText: '已支付', createdAt: '2026-03-23 11:00' },
 ])
 
-const trendChart = ref(null)
-const pieChart = ref(null)
-
-onMounted(() => {
-  echarts.init(trendChart.value).setOption({
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['上行', '下行'], bottom: 0, textStyle: { color: '#666' } },
-    grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-      axisLine: { lineStyle: { color: '#e8e8e8' } },
-      axisLabel: { color: '#666' }
-    },
-    yAxis: {
-      type: 'value',
-      axisLine: { lineStyle: { color: '#e8e8e8' } },
-      axisLabel: { color: '#666' },
-      splitLine: { lineStyle: { color: '#f0f0f0' } }
-    },
-    series: [
-      { name: '上行', type: 'line', smooth: true, data: [120, 140, 110, 160, 180, 210, 240], lineStyle: { color: '#52c41a' }, itemStyle: { color: '#52c41a' } },
-      { name: '下行', type: 'line', smooth: true, data: [80, 100, 90, 120, 140, 160, 180], lineStyle: { color: '#faad14' }, itemStyle: { color: '#faad14' } }
-    ]
-  })
-
-  echarts.init(pieChart.value).setOption({
-    tooltip: { trigger: 'item' },
-    series: [{
-      type: 'pie',
-      radius: ['40%', '70%'],
-      data: [
-        { value: 35, name: '上行', itemStyle: { color: '#52c41a' } },
-        { value: 28, name: '下行', itemStyle: { color: '#faad14' } }
-      ]
-    }]
-  })
-})
+function getStatusType(status) {
+  const types = { paid: 'success', pending: 'warning', completed: 'info', failed: 'danger' }
+  return types[status] || 'info'
+}
 </script>
 
 <style scoped>
+.stats-row { margin: -10px; }
 .stat-card {
-  background: #ffffff;
-  border-radius: 8px;
+  background: white;
   padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
+.stat-icon { font-size: 32px; }
+.stat-value { font-size: 24px; font-weight: bold; color: #333; }
+.stat-label { font-size: 12px; color: #888; }
+.chart-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.chart-card h3 { margin-bottom: 20px; color: #333; }
+.chart-placeholder { min-height: 200px; }
 
-.stat-title {
-  color: #999;
-  font-size: 14px;
-  margin-bottom: 8px;
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 180px;
+  padding: 10px 0;
+}
+.bar {
+  width: 40px;
+  background: linear-gradient(to top, #409EFF, #66B1FF);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+}
+.bar-label {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #666;
+}
+.bar-x-axis {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888;
 }
 
-.stat-value {
-  font-size: 28px;
+.pie-chart {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: conic-gradient(#409EFF 0% 40%, #67C23A 40% 65%, #E6A23C 65% 100%);
+  margin: 0 auto;
+  position: relative;
+}
+.pie-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
 }
-
-.stat-change {
+.pie-legend { margin-top: 20px; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
   font-size: 12px;
-  color: #52c41a;
-  margin-top: 4px;
 }
-
-.stat-change.down {
-  color: #ff4d4f;
-}
-
-.chart {
-  height: 280px;
-}
+.legend-color { width: 12px; height: 12px; border-radius: 2px; }
+.legend-value { margin-left: auto; font-weight: bold; }
 </style>

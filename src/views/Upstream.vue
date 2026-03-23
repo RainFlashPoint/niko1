@@ -1,111 +1,123 @@
 <template>
-  <div class="upstream">
-    <el-row :gutter="20">
-      <el-col :span="6">
-        <div class="stat-card">
-          <div class="stat-title">渠道数量</div>
-          <div class="stat-value" style="color: #1890ff;">4</div>
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <div class="stat-card">
-          <div class="stat-title">今日推送</div>
-          <div class="stat-value" style="color: #52c41a;">289</div>
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <div class="stat-card">
-          <div class="stat-title">API调用</div>
-          <div class="stat-value" style="color: #faad14;">1,256</div>
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <div class="stat-card">
-          <div class="stat-title">成功率</div>
-          <div class="stat-value" style="color: #722ed1;">99.2%</div>
-        </div>
-      </el-col>
-    </el-row>
+  <div class="upstream-page">
+    <div class="toolbar">
+      <el-button type="primary" @click="handleAdd">+ 添加上游</el-button>
+      <el-input v-model="search" placeholder="搜索上游名称..." style="width: 200px; margin-left: 10px" />
+    </div>
 
-    <el-card style="margin-top: 20px;">
-      <template #header>
-        <div class="card-header">
-          <span>上游渠道列表</span>
-          <el-button type="primary" size="small">+ 添加渠道</el-button>
-        </div>
-      </template>
-      <el-table :data="channels" style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="渠道名称" />
-        <el-table-column prop="type" label="类型" width="100" />
-        <el-table-column prop="apiKey" label="API Key" width="180">
-          <template #default="{ row }">
-            <code style="font-size: 12px;">{{ row.apiKey }}****</code>
-          </template>
-        </el-table-column>
-        <el-table-column prop="today" label="今日推送" width="100" />
-        <el-table-column prop="price" label="单价(元)" width="100" />
-        <el-table-column prop="status" label="状态" width="80">
-          <template #default="{ row }">
-            <el-tag :type="row.status === '启用' ? 'success' : 'info'">{{ row.status }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="150">
-          <template #default>
-            <el-button link type="primary" size="small">编辑</el-button>
-            <el-button link type="primary" size="small">查看</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <el-card style="margin-top: 20px;">
-      <template #header>
-        <span>API 配置说明</span>
-      </template>
-      <el-alert type="info" :closable="false">
-        <template #title>
-          <div>
-            <p><strong>上游推送接口：</strong><code>POST /api/inflow</code></p>
-          </div>
+    <el-table :data="filteredData" style="width: 100%; margin-top: 20px">
+      <el-table-column prop="name" label="上游名称" />
+      <el-table-column prop="type" label="类型" />
+      <el-table-column prop="rate" label="分成比例">
+        <template #default="{ row }">
+          {{ row.rate }}%
         </template>
-      </el-alert>
-    </el-card>
+      </el-table-column>
+      <el-table-column prop="dailyLimit" label="日限额" />
+      <el-table-column prop="status" label="状态">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
+            {{ row.status === 'active' ? '正常' : '禁用' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="200">
+        <template #default="{ row }">
+          <el-button size="small" @click="handleEdit(row)">编辑</el-button>
+          <el-button size="small" :type="row.status === 'active' ? 'danger' : 'success'" @click="toggleStatus(row)">
+            {{ row.status === 'active' ? '禁用' : '启用' }}
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 添加/编辑弹窗 -->
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑上游' : '添加上游'" width="500px">
+      <el-form :model="form" label-width="80px">
+        <el-form-item label="上游名称">
+          <el-input v-model="form.name" />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="form.type" style="width: 100%">
+            <el-option label="渠道A" value="channel_a" />
+            <el-option label="渠道B" value="channel_b" />
+            <el-option label="直客" value="direct" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="分成比例">
+          <el-input-number v-model="form.rate" :min="0" :max="100" />
+        </el-form-item>
+        <el-form-item label="日限额">
+          <el-input v-model="form.dailyLimit" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSave">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 
-const channels = ref([
-  { id: 1, name: '渠道A-信息流', type: 'API推送', apiKey: 'uk_a1b2c3d4', today: 156, price: 5.0, status: '启用' },
-  { id: 2, name: '渠道B-搜索', type: 'API推送', apiKey: 'uk_e5f6g7h8', today: 89, price: 8.0, status: '启用' },
-  { id: 3, name: '渠道C-社群', type: 'API推送', apiKey: 'uk_i9j0k1l2', today: 44, price: 3.0, status: '启用' },
+const search = ref('')
+const dialogVisible = ref(false)
+const isEdit = ref(false)
+
+const tableData = ref([
+  { id: 1, name: '上游A', type: '渠道A', rate: 70, dailyLimit: '10万', status: 'active' },
+  { id: 2, name: '上游B', type: '渠道B', rate: 65, dailyLimit: '5万', status: 'active' },
+  { id: 3, name: '上游C', type: '直客', rate: 80, dailyLimit: '8万', status: 'active' },
+  { id: 4, name: '上游D', type: '渠道A', rate: 60, dailyLimit: '3万', status: 'inactive' },
 ])
+
+const form = ref({ id: null, name: '', type: '', rate: 70, dailyLimit: '' })
+
+const filteredData = computed(() => {
+  if (!search.value) return tableData.value
+  return tableData.value.filter(d => d.name.includes(search.value))
+})
+
+function handleAdd() {
+  isEdit.value = false
+  form.value = { id: null, name: '', type: 'channel_a', rate: 70, dailyLimit: '' }
+  dialogVisible.value = true
+}
+
+function handleEdit(row) {
+  isEdit.value = true
+  form.value = { ...row }
+  dialogVisible.value = true
+}
+
+function handleSave() {
+  if (!form.value.name) {
+    ElMessage.warning('请输入名称')
+    return
+  }
+  
+  if (isEdit.value) {
+    const idx = tableData.value.findIndex(d => d.id === form.value.id)
+    if (idx !== -1) tableData.value[idx] = { ...form.value }
+    ElMessage.success('保存成功')
+  } else {
+    form.value.id = Date.now()
+    form.value.status = 'active'
+    tableData.value.push({ ...form.value })
+    ElMessage.success('添加成功')
+  }
+  dialogVisible.value = false
+}
+
+function toggleStatus(row) {
+  row.status = row.status === 'active' ? 'inactive' : 'active'
+  ElMessage.success(row.status === 'active' ? '已启用' : '已禁用')
+}
 </script>
 
 <style scoped>
-.stat-card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.stat-title {
-  color: #999;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+.toolbar { display: flex; align-items: center; }
 </style>
