@@ -90,4 +90,22 @@ export function initDefaultData() {
       { id: 'lp2', title: '流量包B推广页', url: 'https://example.com/lp/2', sourceChannel: '上游B', views: 980, converts: 62, status: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ])
   }
+
+  // 上游推送流量
+  if (!localStorage.getItem('upstream_leads')) {
+    saveStorage('upstream_leads', [
+      { id: 'lead-1001', channelName: '上游A', channelCode: 'UA-001', pushTime: '2026-03-23T09:12:00.000Z', leadName: '李娜', leadPhone: '13600010001', leadSource: '表单', productName: '信用贷A', region: '北京', status: 'new', remark: '' },
+      { id: 'lead-1002', channelName: '上游A', channelCode: 'UA-001', pushTime: '2026-03-23T10:35:00.000Z', leadName: '王磊', leadPhone: '13600010002', leadSource: 'H5', productName: '信用贷B', region: '上海', status: 'processed', remark: '' },
+      { id: 'lead-1003', channelName: '上游B', channelCode: 'UB-002', pushTime: '2026-03-23T11:05:00.000Z', leadName: '赵敏', leadPhone: '13600010003', leadSource: 'API', productName: '车贷', region: '广州', status: 'new', remark: '' },
+      { id: 'lead-1004', channelName: '上游C', channelCode: 'UC-003', pushTime: '2026-03-23T13:20:00.000Z', leadName: '刘强', leadPhone: '13600010004', leadSource: '表单', productName: '房贷', region: '深圳', status: 'invalid', remark: '' },
+      { id: 'lead-1005', channelName: '上游B', channelCode: 'UB-002', pushTime: '2026-03-23T15:40:00.000Z', leadName: '陈晨', leadPhone: '13600010005', leadSource: 'API', productName: '经营贷', region: '杭州', status: 'processed', remark: '' },
+      { id: 'lead-1006', channelName: '上游A', channelCode: 'UA-001', pushTime: '2026-03-23T16:10:00.000Z', leadName: '孙浩', leadPhone: '13600010006', leadSource: 'H5', productName: '信用贷A', region: '南京', status: 'new', remark: '' },
+      { id: 'lead-1007', channelName: '上游C', channelCode: 'UC-003', pushTime: '2026-03-24T08:25:00.000Z', leadName: '周倩', leadPhone: '13600010007', leadSource: '表单', productName: '信用贷C', region: '武汉', status: 'new', remark: '' },
+      { id: 'lead-1008', channelName: '上游A', channelCode: 'UA-001', pushTime: '2026-03-24T09:45:00.000Z', leadName: '唐伟', leadPhone: '13600010008', leadSource: 'API', productName: '车贷', region: '成都', status: 'processed', remark: '' },
+      { id: 'lead-1009', channelName: '上游B', channelCode: 'UB-002', pushTime: '2026-03-24T10:15:00.000Z', leadName: '苏雅', leadPhone: '13600010009', leadSource: 'H5', productName: '信用贷B', region: '重庆', status: 'new', remark: '' },
+      { id: 'lead-1010', channelName: '上游C', channelCode: 'UC-003', pushTime: '2026-03-24T11:05:00.000Z', leadName: '高鹏', leadPhone: '13600010010', leadSource: '表单', productName: '经营贷', region: '西安', status: 'invalid', remark: '' },
+      { id: 'lead-1011', channelName: '上游A', channelCode: 'UA-001', pushTime: '2026-03-24T12:30:00.000Z', leadName: '姚雪', leadPhone: '13600010011', leadSource: 'H5', productName: '信用贷A', region: '天津', status: 'processed', remark: '' },
+      { id: 'lead-1012', channelName: '上游B', channelCode: 'UB-002', pushTime: '2026-03-24T14:10:00.000Z', leadName: '许宁', leadPhone: '13600010012', leadSource: 'API', productName: '车贷', region: '苏州', status: 'new', remark: '' },
+    ])
+  }
 }

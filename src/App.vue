@@ -21,6 +21,9 @@
         <el-menu-item index="/upstream">
           <span>📥 上游管理</span>
         </el-menu-item>
+        <el-menu-item index="/upstream-leads">
+          <span>🧾 上游渠道管理</span>
+        </el-menu-item>
         <el-menu-item index="/downstream">
           <span>📤 下游管理</span>
         </el-menu-item>
@@ -85,6 +88,7 @@ const pageTitle = computed(() => {
   const titles = {
     '/dashboard': '仪表盘',
     '/upstream': '上游管理',
+    '/upstream-leads': '上游渠道管理',
     '/downstream': '下游管理',
     '/crm': '渠道CRM',
     '/distribute': '分发配置',

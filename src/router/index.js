@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Dashboard from '../views/Dashboard.vue'
 import Upstream from '../views/Upstream.vue'
+import UpstreamLeads from '../views/UpstreamLeads.vue'
 import Downstream from '../views/Downstream.vue'
 import CRM from '../views/CRM.vue'
 import Finance from '../views/Finance.vue'
@@ -13,6 +14,7 @@ const routes = [
   { path: '/', name: 'Login', component: Login },
   { path: '/dashboard', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/upstream', name: 'Upstream', component: Upstream, meta: { requiresAuth: true } },
+  { path: '/upstream-leads', name: 'UpstreamLeads', component: UpstreamLeads, meta: { requiresAuth: true } },
   { path: '/downstream', name: 'Downstream', component: Downstream, meta: { requiresAuth: true } },
   { path: '/crm', name: 'CRM', component: CRM, meta: { requiresAuth: true } },
   { path: '/distribute', name: 'Distribute', component: Distribute, meta: { requiresAuth: true } },
