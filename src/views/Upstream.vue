@@ -2,11 +2,12 @@
   <div class="upstream-page">
     <div class="toolbar">
       <el-button type="primary" @click="handleAdd">+ 添加上游</el-button>
-      <el-input v-model="search" placeholder="搜索上游名称..." style="width: 200px; margin-left: 10px" />
+      <el-input v-model="search" placeholder="搜索渠道名称..." style="width: 200px; margin-left: 10px" />
     </div>
 
     <el-table :data="filteredData" style="width: 100%; margin-top: 20px">
-      <el-table-column prop="name" label="上游名称" />
+      <el-table-column prop="channelCode" label="渠道号" width="100" />
+      <el-table-column prop="channelName" label="渠道名称" />
       <el-table-column prop="platform" label="渠道平台" />
       <el-table-column prop="contact" label="联系人" />
       <el-table-column prop="contactPhone" label="联系电话" />
@@ -35,8 +36,11 @@
     <!-- 添加/编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑上游' : '添加上游'" width="600px">
       <el-form :model="form" label-width="100px" :rules="rules" ref="formRef">
-        <el-form-item label="上游名称" prop="name">
-          <el-input v-model="form.name" />
+        <el-form-item label="渠道号" prop="channelCode">
+          <el-input v-model="form.channelCode" placeholder="数字，不能重复" />
+        </el-form-item>
+        <el-form-item label="渠道名称" prop="channelName">
+          <el-input v-model="form.channelName" placeholder="中文名称" />
         </el-form-item>
         <el-form-item label="渠道平台" prop="platform">
           <el-select v-model="form.platform" style="width: 100%">
@@ -82,19 +86,20 @@ const formRef = ref(null)
 const tableData = ref([])
 
 const rules = {
-  name: [{ required: true, message: '请输入上游名称', trigger: 'blur' }],
+  channelCode: [{ required: true, message: '请输入渠道号', trigger: 'blur' }],
+  channelName: [{ required: true, message: '请输入渠道名称', trigger: 'blur' }],
   platform: [{ required: true, message: '请选择渠道平台', trigger: 'change' }],
   costPerLead: [{ required: true, message: '请输入单条成本', trigger: 'blur' }],
 }
 
 const form = ref({ 
-  id: null, name: '', platform: '', contact: '', contactPhone: '', 
+  id: null, channelCode: '', channelName: '', platform: '', contact: '', contactPhone: '', 
   apiEndpoint: '', costPerLead: 50, remark: '', status: 'active' 
 })
 
 const filteredData = computed(() => {
   if (!search.value) return tableData.value
-  return tableData.value.filter(d => d.name.includes(search.value) || d.platform.includes(search.value))
+  return tableData.value.filter(d => d.channelName.includes(search.value) || d.channelCode.includes(search.value))
 })
 
 onMounted(() => {
@@ -105,10 +110,14 @@ function loadData() {
   tableData.value = readStorage('crm_upstreams') || []
 }
 
+function checkChannelCodeExists(code, excludeId = null) {
+  return tableData.value.some(d => d.channelCode === code && d.id !== excludeId)
+}
+
 function handleAdd() {
   isEdit.value = false
   form.value = { 
-    id: null, name: '', platform: '渠道A', contact: '', contactPhone: '', 
+    id: null, channelCode: '', channelName: '', platform: '渠道A', contact: '', contactPhone: '', 
     apiEndpoint: '', costPerLead: 50, remark: '', status: 'active' 
   }
   dialogVisible.value = true
@@ -121,8 +130,14 @@ function handleEdit(row) {
 }
 
 function handleSave() {
-  if (!form.value.name || !form.value.costPerLead) {
+  if (!form.value.channelCode || !form.value.channelName || !form.value.costPerLead) {
     ElMessage.warning('请填写必填项')
+    return
+  }
+  
+  // 检查渠道号是否重复
+  if (checkChannelCodeExists(form.value.channelCode, form.value.id)) {
+    ElMessage.error('渠道号已存在，请使用其他号码')
     return
   }
   

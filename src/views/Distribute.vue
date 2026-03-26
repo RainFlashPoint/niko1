@@ -2,7 +2,7 @@
   <div class="distribute-page">
     <div class="toolbar">
       <el-select v-model="selectedUpstream" placeholder="选择上游" style="width: 200px; margin-right: 10px">
-        <el-option v-for="u in upstreams" :key="u.id" :label="u.name" :value="u.id" />
+        <el-option v-for="u in upstreams" :key="u.id" :label="u.channelName" :value="u.id" />
       </el-select>
       <el-button type="primary" @click="handleAdd">+ 添加分发</el-button>
     </div>
@@ -11,13 +11,13 @@
 
     <template v-else>
       <div class="distribute-card">
-        <h3>{{ currentUpstream?.name }} - 分发下游</h3>
-        <p class="tips">选择该上游可以推送的下游客户，不选择则推送给所有下游</p>
+        <h3>{{ currentUpstream?.channelName }} - 分发下游</h3>
+        <p class="tips">选择该上游可以推送的下游渠道，不选择则推送给所有下游</p>
         
         <el-checkbox-group v-model="selectedDownstreams" class="downstream-list">
           <el-checkbox v-for="d in downstreams" :key="d.id" :label="d.id" border class="downstream-item">
             <div class="downstream-info">
-              <div class="name">{{ d.clientName }}</div>
+              <div class="name">{{ d.channelName }} ({{ d.channelCode }})</div>
               <div class="price">¥{{ d.price }}/条</div>
             </div>
           </el-checkbox>
@@ -90,8 +90,8 @@ const distributionSummary = computed(() => {
     const ds = distributionMap.value[u.id] || []
     return {
       upstreamId: u.id,
-      upstreamName: u.name,
-      downstreamNames: ds.map(did => downstreams.value.find(d => d.id === did)?.clientName || did)
+      upstreamName: u.channelName,
+      downstreamNames: ds.map(did => downstreams.value.find(d => d.id === did)?.channelName || did)
     }
   })
 })

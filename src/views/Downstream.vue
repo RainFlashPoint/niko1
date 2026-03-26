@@ -2,11 +2,12 @@
   <div class="downstream-page">
     <div class="toolbar">
       <el-button type="primary" @click="handleAdd">+ 添加下游</el-button>
-      <el-input v-model="search" placeholder="搜索下游名称..." style="width: 200px; margin-left: 10px" />
+      <el-input v-model="search" placeholder="搜索渠道名称..." style="width: 200px; margin-left: 10px" />
     </div>
 
     <el-table :data="filteredData" style="width: 100%; margin-top: 20px">
-      <el-table-column prop="clientName" label="客户名称" />
+      <el-table-column prop="channelCode" label="渠道号" width="100" />
+      <el-table-column prop="channelName" label="渠道名称" />
       <el-table-column prop="contactPerson" label="联系人" />
       <el-table-column prop="contactPhone" label="联系电话" />
       <el-table-column prop="apiKey" label="API密钥" width="150">
@@ -36,8 +37,11 @@
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑下游' : '添加下游'" width="600px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="客户名称" required>
-          <el-input v-model="form.clientName" />
+        <el-form-item label="渠道号" required>
+          <el-input v-model="form.channelCode" placeholder="数字，不能重复" />
+        </el-form-item>
+        <el-form-item label="渠道名称" required>
+          <el-input v-model="form.channelName" placeholder="中文名称" />
         </el-form-item>
         <el-form-item label="联系人">
           <el-input v-model="form.contactPerson" />
@@ -92,14 +96,18 @@ const isEdit = ref(false)
 const tableData = ref([])
 
 const form = ref({
-  id: null, clientName: '', contactPerson: '', contactPhone: '', email: '', 
+  id: null, channelCode: '', channelName: '', contactPerson: '', contactPhone: '', email: '', 
   apiKey: '', feedUrl: '', pricingModel: 'cpa', price: 100, remark: '', status: 'enabled'
 })
 
 const filteredData = computed(() => {
   if (!search.value) return tableData.value
-  return tableData.value.filter(d => d.clientName.includes(search.value))
+  return tableData.value.filter(d => d.channelName.includes(search.value) || d.channelCode.includes(search.value))
 })
+
+function checkChannelCodeExists(code, excludeId = null) {
+  return tableData.value.some(d => d.channelCode === code && d.id !== excludeId)
+}
 
 function generateKey() {
   form.value.apiKey = 'ds_' + Math.random().toString(36).substr(2, 12)
@@ -117,7 +125,7 @@ onMounted(() => {
 function handleAdd() {
   isEdit.value = false
   form.value = {
-    id: null, clientName: '', contactPerson: '', contactPhone: '', email: '', 
+    id: null, channelCode: '', channelName: '', contactPerson: '', contactPhone: '', email: '', 
     apiKey: '', feedUrl: '', pricingModel: 'cpa', price: 100, remark: '', status: 'enabled'
   }
   generateKey()
@@ -131,8 +139,14 @@ function handleEdit(row) {
 }
 
 function handleSave() {
-  if (!form.value.clientName) {
-    ElMessage.warning('请输入客户名称')
+  if (!form.value.channelCode || !form.value.channelName) {
+    ElMessage.warning('请填写渠道号和渠道名称')
+    return
+  }
+  
+  // 检查渠道号是否重复
+  if (checkChannelCodeExists(form.value.channelCode, form.value.id)) {
+    ElMessage.error('渠道号已存在，请使用其他号码')
     return
   }
   

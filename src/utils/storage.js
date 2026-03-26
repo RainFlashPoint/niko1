@@ -45,17 +45,17 @@ export function initDefaultData() {
   // 上游
   if (!localStorage.getItem('crm_upstreams')) {
     saveStorage('crm_upstreams', [
-      { id: 'u1', name: '上游A', platform: '渠道A', contact: '张经理', contactPhone: '13800138001', apiEndpoint: 'https://api.upstream-a.com', costPerLead: 50, status: 'active', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'u2', name: '上游B', platform: '渠道B', contact: '李经理', contactPhone: '13800138002', apiEndpoint: 'https://api.upstream-b.com', costPerLead: 45, status: 'active', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'u3', name: '上游C', platform: '直客', contact: '王总', contactPhone: '13800138003', apiEndpoint: 'https://api.upstream-c.com', costPerLead: 60, status: 'inactive', remark: '暂停合作', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'u1', channelCode: '1001', channelName: '上游渠道A', platform: '渠道A', contact: '张经理', contactPhone: '13800138001', apiEndpoint: 'https://api.upstream-a.com', costPerLead: 50, status: 'active', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'u2', channelCode: '1002', channelName: '上游渠道B', platform: '渠道B', contact: '李经理', contactPhone: '13800138002', apiEndpoint: 'https://api.upstream-b.com', costPerLead: 45, status: 'active', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'u3', channelCode: '1003', channelName: '上游渠道C', platform: '直客', contact: '王总', contactPhone: '13800138003', apiEndpoint: 'https://api.upstream-c.com', costPerLead: 60, status: 'inactive', remark: '暂停合作', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ])
   }
   
   // 下游
   if (!localStorage.getItem('crm_downstreams')) {
     saveStorage('crm_downstreams', [
-      { id: 'd1', clientName: '客户A', contactPerson: '赵总', contactPhone: '13900139001', email: 'zhao@example.com', apiKey: 'ds_abc123def456', feedUrl: 'https://feed.client-a.com', pricingModel: 'cpa', price: 100, status: 'enabled', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'd2', clientName: '客户B', contactPerson: '钱总', contactPhone: '13900139002', email: 'qian@example.com', apiKey: 'ds_xyz789ghi012', feedUrl: 'https://feed.client-b.com', pricingModel: 'cps', price: 150, status: 'enabled', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'd1', channelCode: '2001', channelName: '下游渠道A', contactPerson: '赵总', contactPhone: '13900139001', email: 'zhao@example.com', apiKey: 'ds_abc123def456', feedUrl: 'https://feed.client-a.com', pricingModel: 'cpa', price: 100, status: 'enabled', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      { id: 'd2', channelCode: '2002', channelName: '下游渠道B', contactPerson: '钱总', contactPhone: '13900139002', email: 'qian@example.com', apiKey: 'ds_xyz789ghi012', feedUrl: 'https://feed.client-b.com', pricingModel: 'cps', price: 150, status: 'enabled', remark: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
     ])
   }
   
