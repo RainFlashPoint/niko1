@@ -8,7 +8,6 @@
     <el-table :data="filteredData" style="width: 100%; margin-top: 20px">
       <el-table-column prop="channelCode" label="渠道号" width="100" />
       <el-table-column prop="channelName" label="渠道名称" />
-      <el-table-column prop="platform" label="渠道平台" />
       <el-table-column prop="contact" label="联系人" />
       <el-table-column prop="contactPhone" label="联系电话" />
       <el-table-column prop="costPerLead" label="单条成本">
@@ -41,13 +40,6 @@
         </el-form-item>
         <el-form-item label="渠道名称" prop="channelName">
           <el-input v-model="form.channelName" placeholder="中文名称" />
-        </el-form-item>
-        <el-form-item label="渠道平台" prop="platform">
-          <el-select v-model="form.platform" style="width: 100%">
-            <el-option label="渠道A" value="渠道A" />
-            <el-option label="渠道B" value="渠道B" />
-            <el-option label="直客" value="直客" />
-          </el-select>
         </el-form-item>
         <el-form-item label="联系人" prop="contact">
           <el-input v-model="form.contact" />
