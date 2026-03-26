@@ -6,7 +6,7 @@
     <aside class="sidebar">
       <div class="logo">
         <span class="logo-icon">🔗</span>
-        <span class="logo-text">流量中转</span>
+        <span class="logo-text">流量平台</span>
       </div>
       <el-menu
         :default-active="route.path"
@@ -101,7 +101,7 @@ const pageTitle = computed(() => {
     '/data': '数据中心',
     '/users': '用户管理'
   }
-  return titles[route.path] || '流量中转'
+  return titles[route.path] || '流量平台'
 })
 
 const handleCommand = (command) => {
@@ -178,6 +178,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  background: #f5f7fa;
 }
 
 .header {
@@ -211,6 +213,8 @@ body {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  background: #f5f7fa;
+  min-height: 0;
 }
 
 :deep(.el-menu-item) {

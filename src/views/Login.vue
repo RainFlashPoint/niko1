@@ -9,7 +9,7 @@
       <div class="login-card">
         <div class="logo">
           <div class="logo-icon">🔗</div>
-          <h1>流量中转</h1>
+          <h1>流量平台</h1>
           <p class="subtitle">Traffic Distribution Platform</p>
         </div>
         
@@ -53,7 +53,7 @@
         </el-form>
         
         <div class="login-footer">
-          <span>© 2026 流量中转系统</span>
+          <span>© 2026 流量平台</span>
         </div>
       </div>
     </div>
