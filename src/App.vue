@@ -21,17 +21,20 @@
         <el-menu-item index="/upstream">
           <span>📥 上游管理</span>
         </el-menu-item>
-        <el-menu-item index="/upstream-leads">
-          <span>🧾 上游渠道管理</span>
-        </el-menu-item>
         <el-menu-item index="/downstream">
           <span>📤 下游管理</span>
         </el-menu-item>
-        <el-menu-item index="/crm">
-          <span>👥 CRM</span>
-        </el-menu-item>
         <el-menu-item index="/distribute">
           <span>🔄 分发配置</span>
+        </el-menu-item>
+        <el-menu-item index="/purchase">
+          <span>🛒 采购</span>
+        </el-menu-item>
+        <el-menu-item index="/sales">
+          <span>💵 销售</span>
+        </el-menu-item>
+        <el-menu-item index="/report">
+          <span>📊 报表</span>
         </el-menu-item>
         <el-menu-item index="/finance" v-if="isAdmin">
           <span>💰 财务</span>
@@ -39,14 +42,11 @@
         <el-menu-item index="/landing">
           <span>📱 H5落地页</span>
         </el-menu-item>
-        <el-menu-item index="/channel">
-          <span>📋 渠道管理</span>
-        </el-menu-item>
-        <el-menu-item index="/rule">
-          <span>⚙️ 分发规则</span>
-        </el-menu-item>
         <el-menu-item index="/data">
           <span>📈 数据中心</span>
+        </el-menu-item>
+        <el-menu-item index="/users" v-if="isAdmin">
+          <span>👥 用户管理</span>
         </el-menu-item>
       </el-menu>
     </aside>
@@ -97,15 +97,15 @@ const pageTitle = computed(() => {
   const titles = {
     '/dashboard': '仪表盘',
     '/upstream': '上游管理',
-    '/upstream-leads': '上游渠道管理',
     '/downstream': '下游管理',
-    '/crm': '渠道CRM',
     '/distribute': '分发配置',
+    '/purchase': '采购管理',
+    '/sales': '销售管理',
+    '/report': '报表中心',
     '/finance': '财务管理',
     '/landing': 'H5落地页',
-    '/channel': '渠道管理',
-    '/rule': '分发规则',
-    '/data': '数据中心'
+    '/data': '数据中心',
+    '/users': '用户管理'
   }
   return titles[route.path] || '流量中转'
 })

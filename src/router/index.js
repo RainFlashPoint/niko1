@@ -2,30 +2,30 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Dashboard from '../views/Dashboard.vue'
 import Upstream from '../views/Upstream.vue'
-import UpstreamLeads from '../views/UpstreamLeads.vue'
 import Downstream from '../views/Downstream.vue'
-import CRM from '../views/CRM.vue'
 import Finance from '../views/Finance.vue'
 import Distribute from '../views/Distribute.vue'
 import Landing from '../views/Landing.vue'
-import Channel from '../views/Channel.vue'
-import Rule from '../views/Rule.vue'
 import Data from '../views/Data.vue'
+import Purchase from '../views/Purchase.vue'
+import Sales from '../views/Sales.vue'
+import Report from '../views/Report.vue'
+import UserManagement from '../views/UserManagement.vue'
 import Login from '../views/Login.vue'
 
 const routes = [
   { path: '/', name: 'Login', component: Login },
   { path: '/dashboard', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/upstream', name: 'Upstream', component: Upstream, meta: { requiresAuth: true } },
-  { path: '/upstream-leads', name: 'UpstreamLeads', component: UpstreamLeads, meta: { requiresAuth: true } },
   { path: '/downstream', name: 'Downstream', component: Downstream, meta: { requiresAuth: true } },
-  { path: '/crm', name: 'CRM', component: CRM, meta: { requiresAuth: true } },
   { path: '/distribute', name: 'Distribute', component: Distribute, meta: { requiresAuth: true } },
   { path: '/finance', name: 'Finance', component: Finance, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/landing', name: 'Landing', component: Landing, meta: { requiresAuth: true } },
-  { path: '/channel', name: 'Channel', component: Channel, meta: { requiresAuth: true } },
-  { path: '/rule', name: 'Rule', component: Rule, meta: { requiresAuth: true } },
   { path: '/data', name: 'Data', component: Data, meta: { requiresAuth: true } },
+  { path: '/purchase', name: 'Purchase', component: Purchase, meta: { requiresAuth: true } },
+  { path: '/sales', name: 'Sales', component: Sales, meta: { requiresAuth: true } },
+  { path: '/report', name: 'Report', component: Report, meta: { requiresAuth: true } },
+  { path: '/users', name: 'UserManagement', component: UserManagement, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 
 const router = createRouter({
