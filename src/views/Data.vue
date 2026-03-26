@@ -14,9 +14,10 @@
               value-format="YYYY-MM-DD"
               style="width: 240px"
             />
-            <el-select v-model="channelFilter" placeholder="选择渠道" clearable style="width: 150px; margin-left: 10px">
-              <el-option label="全部渠道" value="" />
-              <el-option v-for="i in 10" :key="i" :label="`渠道${i}`" :value="`渠道${i}`" />
+            <el-select v-model="channelFilter" placeholder="选择渠道" clearable style="width: 200px; margin-left: 10px">
+              <el-option-group v-for="group in channelOptions" :key="group.label" :label="group.label">
+                <el-option v-for="item in group.options" :key="item.channelCode" :label="`${item.channelName} (${item.channelCode})`" :value="item.channelName" />
+              </el-option-group>
             </el-select>
             <el-button type="primary" style="margin-left: 10px" @click="loadData">查询</el-button>
           </div>
@@ -57,8 +58,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import mockApi from '@/api/mock'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { readStorage } from '../utils/storage'
 
 const tableData = ref([])
 const pagination = reactive({
@@ -70,26 +71,69 @@ const pagination = reactive({
 const dateRange = ref([])
 const channelFilter = ref('')
 
+// 获取上游和下游渠道
+const upstreams = ref([])
+const downstreams = ref([])
+
+const channelOptions = computed(() => [
+  {
+    label: '上游渠道',
+    options: upstreams.value
+  },
+  {
+    label: '下游渠道',
+    options: downstreams.value
+  }
+])
+
 const getStatusType = (status) => {
   const map = { '已入池': 'success', '入池中': 'warning' }
   return map[status] || 'info'
 }
 
-const loadData = async () => {
-  const res = await mockApi.getFlowData({
-    page: pagination.page,
-    pageSize: pagination.pageSize,
-    startDate: dateRange.value?.[0],
-    endDate: dateRange.value?.[1],
-    channel: channelFilter.value
-  })
-  if (res.success) {
-    tableData.value = res.data.list
-    pagination.total = res.data.total
+// 模拟数据生成 - 从真实渠道中选择
+const generateMockData = () => {
+  const list = []
+  const statuses = ['已入池', '入池中']
+  
+  for (let i = 0; i < 50; i++) {
+    const upstream = upstreams.value[Math.floor(Math.random() * upstreams.value.length)]
+    const downstream = downstreams.value[Math.floor(Math.random() * downstreams.value.length)]
+    
+    list.push({
+      id: 1001 + i,
+      upstreamChannel: upstream ? `${upstream.channelName} (${upstream.channelCode})` : '未知',
+      downstreamChannel: downstream ? `${downstream.channelName} (${downstream.channelCode})` : '未知',
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      data: `{"phone": "138****${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}", "name": "用户${i+1}"}`,
+      createTime: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19)
+    })
   }
+  
+  return list
+}
+
+const allData = ref([])
+
+const loadData = () => {
+  // 从上游/下游渠道筛选
+  let filtered = allData.value
+  if (channelFilter.value) {
+    filtered = filtered.filter(d => d.upstreamChannel.includes(channelFilter.value) || d.downstreamChannel.includes(channelFilter.value))
+  }
+  
+  const start = (pagination.page - 1) * pagination.pageSize
+  const end = start + pagination.pageSize
+  tableData.value = filtered.slice(start, end)
+  pagination.total = filtered.length
 }
 
 onMounted(() => {
+  upstreams.value = readStorage('crm_upstreams') || []
+  downstreams.value = readStorage('crm_downstreams') || []
+  
+  // 生成模拟数据
+  allData.value = generateMockData()
   loadData()
 })
 </script>

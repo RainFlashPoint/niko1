@@ -72,8 +72,8 @@ const loading = ref(false)
 const form = ref({ username: '', password: '', remember: false })
 
 const VALID_USERS = [
-  { username: 'admin', password: 'admin123', name: '管理员', role: 'admin' },
-  { username: 'user1', password: 'user1123', name: '张三', role: 'user' },
+  { username: 'admin', password: '123456', name: '管理员', role: 'admin' },
+  { username: 'user1', password: '123456', name: '张三', role: 'user' },
 ]
 
 onMounted(() => {
