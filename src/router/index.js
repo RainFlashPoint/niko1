@@ -8,7 +8,6 @@ import Distribute from '../views/Distribute.vue'
 import Landing from '../views/Landing.vue'
 import Data from '../views/Data.vue'
 import Purchase from '../views/Purchase.vue'
-import Sales from '../views/Sales.vue'
 import Report from '../views/Report.vue'
 import UserManagement from '../views/UserManagement.vue'
 import Login from '../views/Login.vue'
@@ -23,7 +22,6 @@ const routes = [
   { path: '/landing', name: 'Landing', component: Landing, meta: { requiresAuth: true } },
   { path: '/data', name: 'Data', component: Data, meta: { requiresAuth: true } },
   { path: '/purchase', name: 'Purchase', component: Purchase, meta: { requiresAuth: true } },
-  { path: '/sales', name: 'Sales', component: Sales, meta: { requiresAuth: true } },
   { path: '/report', name: 'Report', component: Report, meta: { requiresAuth: true } },
   { path: '/users', name: 'UserManagement', component: UserManagement, meta: { requiresAuth: true, requiresAdmin: true } },
 ]

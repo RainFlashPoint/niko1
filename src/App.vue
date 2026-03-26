@@ -30,9 +30,6 @@
         <el-menu-item index="/purchase">
           <span>🛒 采购</span>
         </el-menu-item>
-        <el-menu-item index="/sales">
-          <span>💵 销售</span>
-        </el-menu-item>
         <el-menu-item index="/report">
           <span>📊 报表</span>
         </el-menu-item>
