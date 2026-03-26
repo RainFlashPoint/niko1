@@ -70,17 +70,17 @@ const stats = ref({
 })
 
 const revenueData = ref([
-  { date: '2026-03-23', type: '下游消费', amount: '8,560', remark: '日常收入' },
-  { date: '2026-03-22', type: '下游消费', amount: '7,230', remark: '日常收入' },
-  { date: '2026-03-21', type: '下游消费', amount: '9,120', remark: '日常收入' },
-  { date: '2026-03-20', type: '下游消费', amount: '6,890', remark: '日常收入' },
+  { date: '2026-03-23', type: 'CPA结算', amount: '8,560', remark: '下游渠道A结算' },
+  { date: '2026-03-22', type: 'UV结算', amount: '7,230', remark: '下游渠道B结算' },
+  { date: '2026-03-21', type: 'CPA结算', amount: '9,120', remark: '下游渠道A结算' },
+  { date: '2026-03-20', type: 'UV结算', amount: '6,890', remark: '下游渠道C结算' },
 ])
 
 const expenseData = ref([
-  { date: '2026-03-23', type: '上游分成', amount: '5,136', remark: '上游A分成' },
-  { date: '2026-03-22', type: '上游分成', amount: '4,338', remark: '上游B分成' },
-  { date: '2026-03-21', type: '上游分成', amount: '5,472', remark: '上游A分成' },
-  { date: '2026-03-20', type: '服务器费用', amount: '200', remark: '云服务器月费' },
+  { date: '2026-03-23', type: '买量成本', amount: '5,136', remark: '上游渠道A' },
+  { date: '2026-03-22', type: '买量成本', amount: '4,338', remark: '上游渠道B' },
+  { date: '2026-03-21', type: '买量成本', amount: '5,472', remark: '上游渠道A' },
+  { date: '2026-03-20', type: '买量成本', amount: '3,200', remark: '上游渠道C' },
 ])
 </script>
 
