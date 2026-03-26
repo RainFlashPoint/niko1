@@ -36,14 +36,13 @@
       <el-col :span="12">
         <div class="chart-card">
           <h3>流量趋势(最近7天)</h3>
-          <div class="chart-placeholder">
-            <div class="bar-chart">
-              <div v-for="(v, i) in flowTrend" :key="i" class="bar" :style="{ height: v + '%' }">
-                <span class="bar-label">{{ v }}%</span>
+          <div class="trend-list">
+            <div v-for="(v, i) in flowTrendData" :key="i" class="trend-item">
+              <span class="trend-date">{{ v.date }}</span>
+              <div class="trend-bar-wrap">
+                <div class="trend-bar" :style="{ width: v.percent + '%' }"></div>
               </div>
-            </div>
-            <div class="bar-x-axis">
-              <span v-for="(d, i) in flowDates" :key="i">{{ d }}</span>
+              <span class="trend-value">{{ v.value }}</span>
             </div>
           </div>
         </div>
@@ -51,16 +50,17 @@
       <el-col :span="12">
         <div class="chart-card">
           <h3>收入分布</h3>
-          <div class="chart-placeholder">
-            <div class="pie-chart">
-              <div class="pie-center">¥{{ totalRevenue }}</div>
-            </div>
-            <div class="pie-legend">
-              <div v-for="(item, i) in revenueDist" :key="i" class="legend-item">
+          <div class="revenue-list">
+            <div v-for="(item, i) in revenueDist" :key="i" class="revenue-item">
+              <div class="revenue-info">
                 <span class="legend-color" :style="{ background: item.color }"></span>
                 <span>{{ item.name }}</span>
-                <span class="legend-value">¥{{ item.value }}</span>
               </div>
+              <span class="revenue-value">¥{{ item.value }}</span>
+            </div>
+            <div class="revenue-total">
+              <span>合计</span>
+              <span class="revenue-value">¥{{ totalRevenue }}</span>
             </div>
           </div>
         </div>
@@ -79,27 +79,22 @@ const stats = ref({
   todayRevenue: '8,560'
 })
 
-const flowTrend = ref([65, 78, 90, 85, 95, 88, 82])
-const flowDates = ref(['周一', '周二', '周三', '周四', '周五', '周六', '周日'])
+const flowTrendData = ref([
+  { date: '03-20', value: 1100, percent: 80 },
+  { date: '03-21', value: 1200, percent: 90 },
+  { date: '03-22', value: 1300, percent: 100 },
+  { date: '03-23', value: 1250, percent: 95 },
+  { date: '03-24', value: 1180, percent: 88 },
+  { date: '03-25', value: 1256, percent: 96 },
+  { date: '03-26', value: 1320, percent: 100 },
+])
 
 const revenueDist = ref([
-  { name: '上游分成', value: '4,280', color: '#409EFF' },
-  { name: '下游分成', value: '2,560', color: '#67C23A' },
-  { name: '服务费', value: '1,720', color: '#E6A23C' }
+  { name: 'CPA结算', value: '4,280', color: '#409EFF' },
+  { name: 'UV结算', value: '2,560', color: '#67C23A' },
+  { name: '其他', value: '1,720', color: '#E6A23C' }
 ])
 const totalRevenue = computed(() => stats.value.todayRevenue.replace(',', ''))
-
-const recentOrders = ref([
-  { orderNo: 'ORD20260323001', user: '张三', product: '流量包A', amount: 100, status: 'paid', statusText: '已支付', createdAt: '2026-03-23 14:30' },
-  { orderNo: 'ORD20260323002', user: '李四', product: '流量包B', amount: 200, status: 'pending', statusText: '待支付', createdAt: '2026-03-23 13:20' },
-  { orderNo: 'ORD20260323003', user: '王五', product: '流量包A', amount: 100, status: 'completed', statusText: '已完成', createdAt: '2026-03-23 12:15' },
-  { orderNo: 'ORD20260323004', user: '赵六', product: '流量包C', amount: 500, status: 'paid', statusText: '已支付', createdAt: '2026-03-23 11:00' },
-])
-
-function getStatusType(status) {
-  const types = { paid: 'success', pending: 'warning', completed: 'info', failed: 'danger' }
-  return types[status] || 'info'
-}
 </script>
 
 <style scoped>
@@ -122,68 +117,22 @@ function getStatusType(status) {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
-.chart-card h3 { margin-bottom: 20px; color: #333; }
-.chart-placeholder { min-height: 200px; }
+.chart-card h3 { margin: 0 0 20px 0; color: #333; font-size: 16px; }
 
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  height: 180px;
-  padding: 10px 0;
-}
-.bar {
-  width: 40px;
-  background: linear-gradient(to top, #409EFF, #66B1FF);
-  border-radius: 4px 4px 0 0;
-  position: relative;
-}
-.bar-label {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: #666;
-}
-.bar-x-axis {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 10px;
-  font-size: 12px;
-  color: #888;
-}
+/* 趋势列表 */
+.trend-list { display: flex; flex-direction: column; gap: 12px; }
+.trend-item { display: flex; align-items: center; gap: 12px; }
+.trend-date { width: 40px; font-size: 12px; color: #666; }
+.trend-bar-wrap { flex: 1; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+.trend-bar { height: 100%; background: linear-gradient(90deg, #409EFF, #67C23A); border-radius: 10px; transition: width 0.3s; }
+.trend-value { width: 50px; text-align: right; font-size: 14px; font-weight: bold; color: #333; }
 
-.pie-chart {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: conic-gradient(#409EFF 0% 40%, #67C23A 40% 65%, #E6A23C 65% 100%);
-  margin: 0 auto;
-  position: relative;
-}
-.pie-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-}
-.pie-legend { margin-top: 20px; }
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  font-size: 12px;
-}
-.legend-color { width: 12px; height: 12px; border-radius: 2px; }
-.legend-value { margin-left: auto; font-weight: bold; }
+/* 收入列表 */
+.revenue-list { display: flex; flex-direction: column; gap: 12px; }
+.revenue-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f9f9f9; border-radius: 8px; }
+.revenue-info { display: flex; align-items: center; gap: 8px; }
+.legend-color { width: 12px; height: 12px; border-radius: 3px; }
+.revenue-value { font-size: 16px; font-weight: bold; color: #333; }
+.revenue-total { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: linear-gradient(135deg, #409EFF, #67C23A); border-radius: 8px; color: white; margin-top: 8px; }
+.revenue-total .revenue-value { color: white; }
 </style>
