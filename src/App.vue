@@ -39,6 +39,15 @@
         <el-menu-item index="/landing">
           <span>📱 H5落地页</span>
         </el-menu-item>
+        <el-menu-item index="/channel">
+          <span>📋 渠道管理</span>
+        </el-menu-item>
+        <el-menu-item index="/rule">
+          <span>⚙️ 分发规则</span>
+        </el-menu-item>
+        <el-menu-item index="/data">
+          <span>📈 数据中心</span>
+        </el-menu-item>
       </el-menu>
     </aside>
     <main class="main-content">
@@ -93,7 +102,10 @@ const pageTitle = computed(() => {
     '/crm': '渠道CRM',
     '/distribute': '分发配置',
     '/finance': '财务管理',
-    '/landing': 'H5落地页'
+    '/landing': 'H5落地页',
+    '/channel': '渠道管理',
+    '/rule': '分发规则',
+    '/data': '数据中心'
   }
   return titles[route.path] || '流量中转'
 })

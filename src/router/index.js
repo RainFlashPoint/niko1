@@ -8,6 +8,9 @@ import CRM from '../views/CRM.vue'
 import Finance from '../views/Finance.vue'
 import Distribute from '../views/Distribute.vue'
 import Landing from '../views/Landing.vue'
+import Channel from '../views/Channel.vue'
+import Rule from '../views/Rule.vue'
+import Data from '../views/Data.vue'
 import Login from '../views/Login.vue'
 
 const routes = [
@@ -20,6 +23,9 @@ const routes = [
   { path: '/distribute', name: 'Distribute', component: Distribute, meta: { requiresAuth: true } },
   { path: '/finance', name: 'Finance', component: Finance, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/landing', name: 'Landing', component: Landing, meta: { requiresAuth: true } },
+  { path: '/channel', name: 'Channel', component: Channel, meta: { requiresAuth: true } },
+  { path: '/rule', name: 'Rule', component: Rule, meta: { requiresAuth: true } },
+  { path: '/data', name: 'Data', component: Data, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
