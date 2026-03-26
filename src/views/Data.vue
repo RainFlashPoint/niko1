@@ -71,7 +71,7 @@ const dateRange = ref([])
 const channelFilter = ref('')
 
 const getStatusType = (status) => {
-  const map = { '成功': 'success', '失败': 'danger', '处理中': 'warning' }
+  const map = { '已入池': 'success', '入池中': 'warning' }
   return map[status] || 'info'
 }
 

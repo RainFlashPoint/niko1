@@ -27,9 +27,6 @@
         <el-menu-item index="/distribute">
           <span>🔄 分发配置</span>
         </el-menu-item>
-        <el-menu-item index="/purchase">
-          <span>🛒 采购</span>
-        </el-menu-item>
         <el-menu-item index="/report">
           <span>📊 报表</span>
         </el-menu-item>
@@ -129,8 +126,19 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
 }
 </style>
 

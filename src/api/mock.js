@@ -30,13 +30,13 @@ const ruleData = Mock.mock({
   }]
 })
 
-// 流量数据
+// 流量数据 - 上游数据都是入池概念，没有失败
 const flowData = Mock.mock({
   'list|50': [{
     'id|+1': 1001,
     'upstreamChannel': '渠道@int(1,10)',
     'downstreamChannel': '渠道@int(11,20)',
-    'status|1': ['成功', '失败', '处理中'],
+    'status|1': ['已入池', '入池中'],
     'data': '{"phone": "138****1234", "name": "@cname"}',
     'createTime': '@datetime'
   }]
