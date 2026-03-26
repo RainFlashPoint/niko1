@@ -2,39 +2,30 @@
   <div class="dashboard">
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
+      <el-col :span="8">
         <div class="stat-card">
           <div class="stat-icon">📥</div>
           <div class="stat-info">
             <div class="stat-value">{{ stats.todayFlow }}</div>
-            <div class="stat-label">今日流量(MB)</div>
+            <div class="stat-label">今日入池量</div>
           </div>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <div class="stat-card">
-          <div class="stat-icon">👥</div>
+          <div class="stat-icon">✅</div>
           <div class="stat-info">
-            <div class="stat-value">{{ stats.activeUsers }}</div>
-            <div class="stat-label">活跃用户</div>
+            <div class="stat-value">{{ stats.pushSuccess }}</div>
+            <div class="stat-label">推送成功总量</div>
           </div>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="8">
         <div class="stat-card">
           <div class="stat-icon">💰</div>
           <div class="stat-info">
             <div class="stat-value">¥{{ stats.todayRevenue }}</div>
             <div class="stat-label">今日收入</div>
-          </div>
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-info">
-            <div class="stat-value">{{ stats.conversionRate }}%</div>
-            <div class="stat-label">转化率</div>
           </div>
         </div>
       </el-col>
@@ -76,30 +67,6 @@
       </el-col>
     </el-row>
 
-    <!-- 最近订单 -->
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="24">
-        <div class="chart-card">
-          <h3>最近订单</h3>
-          <el-table :data="recentOrders" style="width: 100%">
-            <el-table-column prop="orderNo" label="订单号" width="180" />
-            <el-table-column prop="user" label="用户" />
-            <el-table-column prop="product" label="产品" />
-            <el-table-column prop="amount" label="金额">
-              <template #default="{ row }">
-                ¥{{ row.amount }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="status" label="状态">
-              <template #default="{ row }">
-                <el-tag :type="getStatusType(row.status)">{{ row.statusText }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="createdAt" label="时间" />
-          </el-table>
-        </div>
-      </el-col>
-    </el-row>
   </div>
 </template>
 
@@ -107,10 +74,9 @@
 import { ref, computed } from 'vue'
 
 const stats = ref({
-  todayFlow: '2.5G',
-  activeUsers: 156,
-  todayRevenue: '8,560',
-  conversionRate: 12.5
+  todayFlow: '1,256',
+  pushSuccess: '1,198',
+  todayRevenue: '8,560'
 })
 
 const flowTrend = ref([65, 78, 90, 85, 95, 88, 82])
