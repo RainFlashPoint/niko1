@@ -219,7 +219,7 @@ function handleLogin() {
 }
 
 .logo-icon {
-  font-size: 56px;
+  font-size: 72px;
   margin-bottom: 16px;
   display: inline-block;
   animation: pulse 2s infinite ease-in-out;
@@ -236,10 +236,10 @@ function handleLogin() {
 
 .logo h1 {
   color: #fff;
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 36px;
+  font-weight: 700;
   margin: 0 0 8px 0;
-  letter-spacing: 2px;
+  letter-spacing: 4px;
 }
 
 .subtitle {
